@@ -71,7 +71,7 @@ function App() {
     // console.log("Unique Gene Categories:", uniqueGeneCategories);
 
    
-
+console.log(jsonData , 'jsonData')
 
       setJsonData(jsonData);
       extractUniqueClasses(jsonData);
@@ -96,16 +96,21 @@ function App() {
     const nodesMap = new Map();
     const links = [];
   
+    console.log(data )
     data.forEach((row) => {
       const disease = row.Disease;
       const gene = row.Gene;
+      const Phenotypes = row.Phenotypes ;
   const class_disease = row.Disease_category  
+
      const   class_gene = row['Gene category']
       if (disease && !nodesMap.has(disease)) {
         nodesMap.set(disease, {
           id: disease,
           type: "Disease",
           class: class_disease,
+          Phenotypes: Phenotypes,
+      
         });
       }
   
@@ -114,6 +119,18 @@ function App() {
           id: gene,
           type: "Gene",
           class: class_gene,
+          Gene: gene,
+          Name: row.Name,
+          GeneCategory: row.Synonyms,
+          Location: row.Location,
+          Strand: row.Strand,
+          Description: row.Description,
+          OMIM: row.OMIM,
+          Ensembl: row.EFO_Ids_Mondo,
+          ClinVar: row.ClinVar,
+          Decipher: row.Decipher,
+          gnomAD: row.gnomAD,
+          PanelApp: row.PanelApp
         });
       }
   
@@ -137,9 +154,6 @@ function App() {
         if (checkedClasses[row.Disease_category] && checkedClasses[row['Gene category']] ) {
           return true;  // Keep the row if Disease is checked (true)
         }
-      
-       
-      
         return false;  // Exclude the row if neither is checked (false)
       });
 
