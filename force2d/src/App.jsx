@@ -228,7 +228,7 @@ console.log(jsonData , 'jsonData')
                   justifyContent: "space-between",
                   alignItems: "center",
                 }}>
-                <span>Inheritance based categorization</span>
+                <span>Anatomy based categorization</span>
                 <div>
                   {/* <Select
                     mode="multiple"
