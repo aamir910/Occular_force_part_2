@@ -184,7 +184,7 @@ function App() {
                 }}>
                 <span>Inheritance based categorization</span>
                 <div>
-                  <Select
+                  {/* <Select
                     mode="multiple"
                     placeholder="Select disease"
                     dropdownStyle={{ maxHeight: "300px", overflowY: "auto" }}
@@ -199,7 +199,7 @@ function App() {
                       </Option>
                     ))}
                   </Select>
-                  <Button onClick={applyFilter}>Filter</Button>
+                  <Button onClick={applyFilter}>Filter</Button> */}
                 </div>
               </div>
             }
