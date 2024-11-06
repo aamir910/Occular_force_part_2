@@ -41,8 +41,19 @@ function App() {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-console.log(jsonData , "here is teh json data ")
-
+      const uniqueDiseaseCategories = Array.from(new Set(jsonData
+        .filter(node => node.Disease_category) // Filter out nodes with a defined 'Disease_category'
+        .map(node => node.Disease_category) // Map to 'Disease_category'
+    ));
+    
+    // Get unique 'Gene category'
+    const uniqueGeneCategories = Array.from(new Set(jsonData
+        .filter(node => node['Gene category']) // Filter out nodes with a defined 'Gene category'
+        .map(node => node['Gene category']) // Map to 'Gene category'
+    ));
+    
+    console.log("Unique Disease Categories:", uniqueDiseaseCategories);
+    console.log("Unique Gene Categories:", uniqueGeneCategories);
 
       setJsonData(jsonData);
       extractUniqueClasses(jsonData);
@@ -70,12 +81,13 @@ console.log(jsonData , "here is teh json data ")
     data.forEach((row) => {
       const disease = row.Disease;
       const gene = row.Gene;
-  
+  const class_disease = row.Disease_category  
+     const   class_gene = row['Gene category']
       if (disease && !nodesMap.has(disease)) {
         nodesMap.set(disease, {
           id: disease,
           type: "Disease",
-          class: "Disease",
+          class: class_disease,
         });
       }
   
@@ -83,7 +95,7 @@ console.log(jsonData , "here is teh json data ")
         nodesMap.set(gene, {
           id: gene,
           type: "Gene",
-          class: "Gene",
+          class: class_gene,
         });
       }
   

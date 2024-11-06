@@ -12,42 +12,83 @@
         id: node.id,
         group: node.type,
         class: node.class,
-        EFO_Ids_Mondo: node.EFO_Ids_Mondo,
-        ORPHanet_ID: node.ORPHanet_ID,
-        EYE_FINDING: node.EYE_FINDING , 
-        Mode_of_inheritance: node.Modeofinheritance , 
-        Repurposing_candidate_chembL_ID: node.Repurposing_candidate_chembL_ID,
-        Approved_drug_chembl_ID: node.Approved_drug_chembl_ID,
-      
+
       })),
       links: links.map(link => ({ source: link.source, target: link.target })),
     }), [nodes, links]);
 
     // Function to draw different node shapes based on the group and class
-    const drawNode = (node, ctx) => {
-      const shapeSize = 10;
-      ctx.beginPath();
-    console.log(node , "node nodenode node")
-      if (node.group === "Disease") {
-        // Draw triangle for 'Disease'
-        ctx.moveTo(node.x, node.y - shapeSize);
-        ctx.lineTo(node.x - shapeSize, node.y + shapeSize);
-        ctx.lineTo(node.x + shapeSize, node.y + shapeSize);
-        ctx.closePath();
-        ctx.fillStyle = 'red'; // Example color for Disease
-      } else if (node.group === "Gene") {
-        // Draw circle for 'Gene'
-        ctx.arc(node.x, node.y, shapeSize, 0, 2 * Math.PI, false);
-        ctx.fillStyle = 'blue'; // Example color for Gene
-      }
-    
-      ctx.fill();
-    
-      // Optional: Add node ID label next to each node
-      ctx.fillStyle = 'black';
-      ctx.font = '10px Arial';
-      ctx.fillText(node.id, node.x + shapeSize + 5, node.y);
-    };
+   const getNodeColor = (nodeClass) => {
+  switch (nodeClass) {
+    case 'Refractive errors':
+      return 'red';
+    case 'Retinal diseases':
+      return 'blue';
+    case 'Others':
+      return 'green';
+    case 'Lens diseases':
+      return 'orange';
+    case 'Ocular hypertension':
+      return 'purple';
+    case 'Ocular motility disorders':
+      return 'pink';
+    case 'Uveal diseases':
+      return 'cyan';
+    case 'Corneal diseases':
+      return 'magenta';
+    case 'Conjunctival diseases':
+      return 'lime';
+    case 'Orbital diseases':
+      return 'teal';
+    case 'Eye Neoplasms':
+      return 'salmon';
+    case 'Lacrimal Apparatus diseases':
+      return 'violet';
+    case 'Pseudogene':
+      return 'brown';
+    case 'Genetic Locus':
+      return 'darkgreen';
+    case 'lncRNA':
+      return 'orange';
+    case 'miRNA':
+      return 'purple';
+    case 'mt_tRNA':
+      return 'darkblue';
+    case 'Other':
+      return 'gray';
+    case 'Protein coding':
+      return 'yellow';
+    case 'RNA gene':
+      return 'pink';
+    default:
+      return 'black'; // Default color if class not found
+  }
+};
+
+const drawNode = (node, ctx) => {
+  const shapeSize = 10;
+  const color = getNodeColor(node.class); // Get color based on class
+  ctx.beginPath();
+  ctx.fillStyle = color;
+
+  if (node.group === 'Disease') {
+    // Draw triangle for 'Disease'
+    ctx.moveTo(node.x, node.y - shapeSize);
+    ctx.lineTo(node.x - shapeSize, node.y + shapeSize);
+    ctx.lineTo(node.x + shapeSize, node.y + shapeSize);
+    ctx.closePath();
+  } else if (node.group === 'Gene') {
+    // Draw circle for 'Gene'
+    ctx.arc(node.x, node.y, shapeSize, 0, 2 * Math.PI, false);
+  }
+
+  ctx.fill();
+
+  // Optional: Add node ID label next to each node
+  ctx.fillStyle = 'black';
+  ctx.font = '10px Arial';
+  ctx.fillText(node.id, node.x + shapeSize + 5, node.y);
+};
     
 
     // Handle node click to set selected node
