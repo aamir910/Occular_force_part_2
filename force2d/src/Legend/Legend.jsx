@@ -76,23 +76,27 @@ const Legend = ({ checkedClasses, onClassChange, selectedValues }) => {
                     <svg width="20" height="20" style={{ marginRight: '2px' }}>
                       <polygon points="10,0 0,20 20,20" fill={item.color} />
                     </svg>
-                    {/* <Checkbox
+                    <Checkbox
                       checked={checkedClasses[item.class]}
                       onChange={(e) => onClassChange(item.class, e.target.checked)}
                       style={{ marginLeft: '2px' }}
-                    /> */}
+                    />
                   </>
                 )}
                 {item.shape === 'circle' && (
+                  <>
+                 
                   <svg width="20" height="20" style={{ marginRight: '2px', marginTop: "5px" }}>
                     <circle cx="10" cy="10" r="10" fill={item.color} />
                   </svg>
+                       <Checkbox
+                      checked={checkedClasses[item.class]}
+                      onChange={(e) => onClassChange(item.class, e.target.checked)}
+                      style={{ marginLeft: '2px' }}
+                    />
+                    </>
                 )}
-                {item.shape === 'capsule' && (
-                  <svg width="20" height="20" style={{ marginRight: '2px' }}>
-                    <rect x="0" y="5" width="20" height="10" rx="5" ry="5" fill={item.color} />
-                  </svg>
-                )}
+              
                 <div style={{ marginLeft: '3px' }}>
                   {item.label}
                 </div>

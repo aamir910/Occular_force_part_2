@@ -11,16 +11,31 @@ function App() {
   const [originalData, setOriginalData] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [checkedClasses, setCheckedClasses] = useState({
-    "Autosomal recessive": true,
-    "X-linked dominant": true,
-    Other: true,
-    "Isolated cases": true,
-    "Autosomal dominant": true,
-    "X-linked recessive": true,
-    Mitochondrial: true,
-    "-": true,
-    Isolated: true,
+    // Disease Classes
+    "Refractive errors": true,
+    "Retinal diseases": true,
+    "Others": true,
+    "Lens diseases": true,
+    "Ocular hypertension": true,
+    "Ocular motility disorders": true,
+    "Uveal diseases": true,
+    "Corneal diseases": true,
+    "Conjunctival diseases": true,
+    "Orbital diseases": true,
+    "Eye Neoplasms": true,
+    "Lacrimal Apparatus diseases": true,
+  
+    // Gene Classes
+    "Pseudogene": true,
+    "Genetic Locus": false,
+    "lncRNA": true,
+    "miRNA": true,
+    "mt_tRNA": true,
+    "Other": true,
+    "Protein coding": false,
+    "RNA gene": true,
   });
+  
   const [uniqueClasses, setUniqueClasses] = useState([]);
   const [selectedValues, setSelectedValues] = useState([]);
   const [uniqueModes, setUniqueModes] = useState([]);
@@ -41,19 +56,22 @@ function App() {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      const uniqueDiseaseCategories = Array.from(new Set(jsonData
-        .filter(node => node.Disease_category) // Filter out nodes with a defined 'Disease_category'
-        .map(node => node.Disease_category) // Map to 'Disease_category'
-    ));
+    //   const uniqueDiseaseCategories = Array.from(new Set(jsonData
+    //     .filter(node => node.Disease_category) // Filter out nodes with a defined 'Disease_category'
+    //     .map(node => node.Disease_category) // Map to 'Disease_category'
+    // ));
+  
+    // // Get unique 'Gene category'
+    // const uniqueGeneCategories = Array.from(new Set(jsonData
+    //     .filter(node => node['Gene category']) // Filter out nodes with a defined 'Gene category'
+    //     .map(node => node['Gene category']) // Map to 'Gene category'
+    // ));
     
-    // Get unique 'Gene category'
-    const uniqueGeneCategories = Array.from(new Set(jsonData
-        .filter(node => node['Gene category']) // Filter out nodes with a defined 'Gene category'
-        .map(node => node['Gene category']) // Map to 'Gene category'
-    ));
-    
-    console.log("Unique Disease Categories:", uniqueDiseaseCategories);
-    console.log("Unique Gene Categories:", uniqueGeneCategories);
+    // console.log("Unique Disease Categories:", uniqueDiseaseCategories);
+    // console.log("Unique Gene Categories:", uniqueGeneCategories);
+
+   
+
 
       setJsonData(jsonData);
       extractUniqueClasses(jsonData);
@@ -112,7 +130,21 @@ function App() {
   // Update graphData only when jsonData or checkedClasses change
   useEffect(() => {
     if (jsonData) {
-      const newGraphData = createNodesAndLinks(jsonData);
+
+
+      let jsonData2 = jsonData.filter(row => {
+        // Check if Disease category is selected (true in checkedClasses)
+        if (checkedClasses[row.Disease_category] && checkedClasses[row['Gene category']] ) {
+          return true;  // Keep the row if Disease is checked (true)
+        }
+      
+       
+      
+        return false;  // Exclude the row if neither is checked (false)
+      });
+
+
+      const newGraphData = createNodesAndLinks(jsonData2);
       setGraphData(newGraphData);
     }
   }, [jsonData, checkedClasses]);
