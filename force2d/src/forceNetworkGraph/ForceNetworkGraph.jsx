@@ -27,7 +27,7 @@ const ForceNetworkGraph = ({ nodes, links }) => {
         Strand: node.Strand,
         Description: node.Description,
         OMIM: node.OMIM,
-        Ensembl: node.EFO_Ids_Mondo,
+        Ensembl: node.Ensembl,
         ClinVar: node.ClinVar,
         Decipher: node.Decipher,
         gnomAD: node.gnomAD,
@@ -37,6 +37,8 @@ const ForceNetworkGraph = ({ nodes, links }) => {
       links: links.map((link) => ({
         source: link.source,
         target: link.target,
+        DOIs : link.DOIs ,
+        group :"link"
       })),
     }),
     [nodes, links]
@@ -139,12 +141,13 @@ const ForceNetworkGraph = ({ nodes, links }) => {
         nodeRelSize={10}
         enableZoomInteraction={true}
         onNodeClick={handleNodeClick} // Handle node click
+        onLinkClick={handleNodeClick} // Handle link click
         nodeLabel={(node) => {
           return `<div style="background-color: black; color: white; padding: 5px; border-radius: 4px;">${node.id}</div>`;
         }}
       />
       {selectedNode && (
-        <DataTable node={selectedNode} onClose={() => setSelectedNode(null)} />
+        <DataTable node={selectedNode} onClose={() => setSelectedNode(null)}   size="small"       className="compact-table"/>
       )}
     </div>
   );
@@ -153,7 +156,6 @@ const ForceNetworkGraph = ({ nodes, links }) => {
 // DataTable component to display node details
 
 const DataTable = ({ node, onClose }) => {
-  console.log(node);
 
   // Define the columns for the Ant Design table
   const columns = [
@@ -161,31 +163,38 @@ const DataTable = ({ node, onClose }) => {
       title: "Property",
       dataIndex: "property",
       key: "property",
-      render: (text) => text,
+      render: (text) => (
+        <div style={{ paddingTop: "1px", paddingBottom: "1px" }}>{text}</div>
+      ),
     },
     {
       title: "Value",
       dataIndex: "value",
       key: "value",
       render: (text, record) => {
-        console.log(record, "record");
-
         // Check if the property should be clickable
-        if (["Ensembl", "ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(record.property)) {
-          // Get the URL from node[record.property]
+        if (["ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(record.property)) {
           const url = node[record.property];
-
-          // Render the link if the URL exists
           return url ? (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer">
+            <a href={url} target="_blank" rel="noopener noreferrer">
               click here
             </a>
           ) : (
             "N/A"
           );
+        } else if ( node.group === "link") {
+          // Split DOI entries by "; " and display each on a new line
+          console.log(text ,"text")
+          if(text){
+       
+            const doiList = text.split(";").map((doi, index) => (
+              <div key={index}>{doi.trim()}</div>
+            ));
+            return doiList.length ? doiList : "N/A";
+
+          }
+        } else if (record.property === "Phenotypes") {
+          return text || "N/A";
         }
         return text;
       },
@@ -199,8 +208,11 @@ const DataTable = ({ node, onClose }) => {
     dataSource = [
       { key: "Phenotypes", property: "Phenotypes", value: node.Phenotypes },
     ];
+  } else if (node.group === "link" ) {
+    dataSource = [
+      { key: "DOIs", property: "DOIs", value: node.DOIs },
+    ];
   } else {
-    // Default properties if no specific group matches
     dataSource = [
       { key: "Gene", property: "Gene", value: node.Gene },
       { key: "Name", property: "Name", value: node.Name },
@@ -208,7 +220,7 @@ const DataTable = ({ node, onClose }) => {
       { key: "Strand", property: "Strand", value: node.Strand },
       { key: "Description", property: "Description", value: node.Description },
       { key: "OMIM", property: "OMIM", value: node.OMIM },
-      { key: "Ensembl", property: "Ensembl", value: "click here" },
+      { key: "Ensembl", property: "Ensembl", value: node.Ensembl },
       { key: "ClinVar", property: "ClinVar", value: "click here" },
       { key: "Decipher", property: "Decipher", value: "click here" },
       { key: "gnomAD", property: "gnomAD", value: "click here" },
@@ -235,7 +247,7 @@ const DataTable = ({ node, onClose }) => {
         width: "auto",
       }}>
       <h2>{node.id}</h2>
-      <Table columns={columns} dataSource={dataSource} pagination={false} />
+      <Table columns={columns} dataSource={dataSource} pagination={false} size="small" />
       <Button type="primary" onClick={onClose} style={{ marginTop: "10px" }}>
         Close
       </Button>
