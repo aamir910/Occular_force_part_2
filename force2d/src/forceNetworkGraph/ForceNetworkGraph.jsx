@@ -169,31 +169,22 @@ const DataTable = ({ node, onClose }) => {
       key: "value",
       render: (text, record) => {
         console.log(record, "record");
-        if (["EFO_Ids_Mondo"].includes(record.property)) {
-          return (
+
+        // Check if the property should be clickable
+        if (["Ensembl", "ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(record.property)) {
+          // Get the URL from node[record.property]
+          const url = node[record.property];
+
+          // Render the link if the URL exists
+          return url ? (
             <a
-              href={`https://monarchinitiative.org/${text}`}
+              href={url}
               target="_blank"
               rel="noopener noreferrer">
-              {text}
+              click here
             </a>
-          );
-        } else if (
-          [
-            "ORPHanet_ID",
-            "Mode_of_inheritance",
-            "Repurposing_candidate_chembL_ID",
-            "Approved_drug_chembl_ID",
-          ].includes(record.property)
-        ) {
-          const id = 1;
-          return (
-            <a
-              href={`https://www.orpha.net/en/disease/detail/${id}?name=Orphanet:782${text}`}
-              target="_blank"
-              rel="noopener noreferrer">
-              {text}
-            </a>
+          ) : (
+            "N/A"
           );
         }
         return text;
@@ -208,7 +199,7 @@ const DataTable = ({ node, onClose }) => {
     dataSource = [
       { key: "Phenotypes", property: "Phenotypes", value: node.Phenotypes },
     ];
-  }   else {
+  } else {
     // Default properties if no specific group matches
     dataSource = [
       { key: "Gene", property: "Gene", value: node.Gene },
@@ -217,11 +208,11 @@ const DataTable = ({ node, onClose }) => {
       { key: "Strand", property: "Strand", value: node.Strand },
       { key: "Description", property: "Description", value: node.Description },
       { key: "OMIM", property: "OMIM", value: node.OMIM },
-      { key: "Ensembl", property: "Ensembl",value: "click here" },
-      { key: "ClinVar", property: "ClinVar", value: "click here"  },
+      { key: "Ensembl", property: "Ensembl", value: "click here" },
+      { key: "ClinVar", property: "ClinVar", value: "click here" },
       { key: "Decipher", property: "Decipher", value: "click here" },
-      { key: "gnomAD", property: "gnomAD", value: "click here"  },
-      { key: "PanelApp", property: "PanelApp", value: "click here"  },
+      { key: "gnomAD", property: "gnomAD", value: "click here" },
+      { key: "PanelApp", property: "PanelApp", value: "click here" },
     ];
   }
 
@@ -241,7 +232,7 @@ const DataTable = ({ node, onClose }) => {
         borderRadius: 5,
         boxShadow: "0px 0px 10px rgba(0,0,0,0.2)",
         zIndex: 10,
-        width: AutoComplete,
+        width: "auto",
       }}>
       <h2>{node.id}</h2>
       <Table columns={columns} dataSource={dataSource} pagination={false} />
@@ -251,5 +242,6 @@ const DataTable = ({ node, onClose }) => {
     </div>
   );
 };
+
 
 export default ForceNetworkGraph;

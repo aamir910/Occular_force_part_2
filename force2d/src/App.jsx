@@ -27,12 +27,12 @@ function App() {
   
     // Gene Classes
     "Pseudogene": true,
-    "Genetic Locus": false,
+    "Genetic Locus": true ,
     "lncRNA": true,
     "miRNA": true,
     "mt_tRNA": true,
     "Other": true,
-    "Protein coding": false,
+    "Protein coding": true,
     "RNA gene": true,
   });
   
