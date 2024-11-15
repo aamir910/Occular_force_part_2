@@ -198,7 +198,7 @@ function App() {
     <div className="app-container" style={{ padding: "2px", width: "100%" }}>
       <Row gutter={16}>
         {/* Legend with checkboxes */}
-        <Col span={4} >
+        <Col span={4}  style={{ minWidth: '20%' }}>
           <Card
             title=""
             bordered
@@ -206,6 +206,7 @@ function App() {
               backgroundColor: "#ffffff",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               borderRadius: "8px",
+         
               
             }}>
             <Legend   
@@ -219,7 +220,7 @@ function App() {
         </Col>
 
         {/* 2D Force Network Graph */}
-        <Col span={19}>
+        <Col span={19} style={{ minWidth: '60%' }}>
           <Card
             title={
               <div
@@ -254,6 +255,7 @@ function App() {
               backgroundColor: "#ffffff",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               borderRadius: "8px",
+              
             }}>
             {graphData.nodes.length > 0 && graphData.links.length > 0 ? (
               <ForceNetworkGraph
@@ -261,7 +263,8 @@ function App() {
                 links={graphData.links}
               />
             ) : (
-              <p>No data in current filtration...</p>
+              
+              <p style={{ paddingRight:"45rem", width: "99%", overflow: "hidden" }}>No data in current filtration...</p>
             )}
           </Card>
         </Col>
