@@ -39,7 +39,6 @@ function App() {
   const [uniqueClasses, setUniqueClasses] = useState([]);
   const [selectedValues, setSelectedValues] = useState([]);
   const [uniqueModes, setUniqueModes] = useState([]);
-  console.log(uniqueClasses, "uniqueClasses");
   const { Option } = Select;
 
   // Fetch Excel file on component mount
@@ -83,7 +82,7 @@ function App() {
   const extractUniqueClasses = (data) => {
     const classes = new Set();
     data.forEach((row) => {
-      const classOfNode = row["DISORDER"];
+      const classOfNode = row["Disease"];
       if (classOfNode) {
         classes.add(classOfNode);
       }
@@ -175,13 +174,18 @@ function App() {
     if (jsonData) {
       if (selectedValues.length !== 0) {
         const filtered = originalData.filter((row) =>
-          selectedValues.includes(row["DISORDER"])
+          selectedValues.includes(row["Disease"])
         );
         setJsonData(filtered);
         if (filtered.length > 0) {
           // Extract unique 'MODE OF INHERITANCE' values from filtered rows
           const uniqueModesArray = [
-            ...new Set(filtered.map((row) => row["MODE OF INHERITANCE"])),
+            ...new Set(
+              filtered.flatMap((row) => [
+                row["Disease_category"],
+                row["Gene category"],
+              ])
+            ),
           ];
           setUniqueModes(uniqueModesArray);
         }
@@ -231,7 +235,7 @@ function App() {
                 }}>
                 <span>Anatomy based categorization</span>
                 <div>
-                  {/* <Select
+                  <Select
                     mode="multiple"
                     placeholder="Select disease"
                     dropdownStyle={{ maxHeight: "300px", overflowY: "auto" }}
@@ -246,7 +250,7 @@ function App() {
                       </Option>
                     ))}
                   </Select>
-                  <Button onClick={applyFilter}>Filter</Button> */}
+                  <Button onClick={applyFilter}>Filter</Button>
                 </div>
               </div>
             }

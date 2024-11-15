@@ -9,6 +9,8 @@ const Legend = ({
   selectedValues,
   setCheckedClasses,
 }) => {
+
+  console.log(selectedValues , "selectedValues is here ")
   const legendItems = [
     {
       group: "Disease",
@@ -122,9 +124,9 @@ const Legend = ({
       ],
     },
   ];
-  console.log(checkedClasses, "checkedClasses checkedClasses");
+  console.log(selectedValues, "checkedClasses checkedClasses");
   const filteredLegendItems = legendItems.map((group) => {
-    if (group.group === "Disease") {
+    // if (group.group === "") {
       return {
         ...group,
         items:
@@ -133,8 +135,9 @@ const Legend = ({
             : group.items.filter((item) => selectedValues.includes(item.label)),
       };
     }
-    return group;
-  });
+    // return group;
+  // }
+);
 
   return (
     <Row>
