@@ -198,7 +198,7 @@ function App() {
     <div className="app-container" style={{ padding: "2px", width: "100%" }}>
       <Row gutter={16}>
         {/* Legend with checkboxes */}
-        <Col span={4}>
+        <Col span={4} >
           <Card
             title=""
             bordered
@@ -206,11 +206,14 @@ function App() {
               backgroundColor: "#ffffff",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               borderRadius: "8px",
+              
             }}>
-            <Legend
+            <Legend   
               checkedClasses={checkedClasses}
               onClassChange={handleClassCheckboxChange}
               selectedValues={uniqueModes}
+              setCheckedClasses = {setCheckedClasses}
+              
             />
           </Card>
         </Col>

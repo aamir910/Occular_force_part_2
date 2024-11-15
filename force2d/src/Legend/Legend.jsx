@@ -1,7 +1,9 @@
 import React from 'react';
 import { Row, Col, Checkbox } from 'antd';
 
-const Legend = ({ checkedClasses, onClassChange, selectedValues }) => {
+import ToggleCategory from './ToggleCategory';
+
+const Legend = ({ checkedClasses, onClassChange, selectedValues ,setCheckedClasses  }) => {
   const legendItems = [
     {
       group: 'Disease',
@@ -36,7 +38,7 @@ const Legend = ({ checkedClasses, onClassChange, selectedValues }) => {
 
     },
   ];
-
+console.log(checkedClasses ,"checkedClasses checkedClasses")
   const filteredLegendItems = legendItems.map((group) => {
     if (group.group === 'Disease') {
       return {
@@ -50,7 +52,15 @@ const Legend = ({ checkedClasses, onClassChange, selectedValues }) => {
   });
 
   return (
-    <Row>
+    <Row style={{minWidth :"50rem"}}>
+          <ToggleCategory
+          type="Disease"
+          legendItems={legendItems}
+          checkedClasses={checkedClasses}
+          setCheckedClasses={setCheckedClasses}
+        >
+          Toggle Diseases
+        </ToggleCategory>
       {filteredLegendItems.map((group, groupIndex) => (
         <Col key={groupIndex} span={24} style={{ marginTop: group.group === '' ? '25px' : '0' }}>
           <dl style={{ margin: 0, padding: 0 }}>
@@ -76,11 +86,13 @@ const Legend = ({ checkedClasses, onClassChange, selectedValues }) => {
                     <svg width="20" height="20" style={{ marginRight: '2px' }}>
                       <polygon points="10,0 0,20 20,20" fill={item.color} />
                     </svg>
+
                     <Checkbox
                       checked={checkedClasses[item.class]}
                       onChange={(e) => onClassChange(item.class, e.target.checked)}
                       style={{ marginLeft: '2px' }}
                     />
+
                   </>
                 )}
                 {item.shape === 'circle' && (
