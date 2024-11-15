@@ -52,15 +52,8 @@ console.log(checkedClasses ,"checkedClasses checkedClasses")
   });
 
   return (
-    <Row style={{minWidth :"50rem"}}>
-          <ToggleCategory
-          type="Disease"
-          legendItems={legendItems}
-          checkedClasses={checkedClasses}
-          setCheckedClasses={setCheckedClasses}
-        >
-          Toggle Diseases
-        </ToggleCategory>
+    <Row>
+      
       {filteredLegendItems.map((group, groupIndex) => (
         <Col key={groupIndex} span={24} style={{ marginTop: group.group === '' ? '25px' : '0' }}>
           <dl style={{ margin: 0, padding: 0 }}>
@@ -68,7 +61,26 @@ console.log(checkedClasses ,"checkedClasses checkedClasses")
               fontWeight: 'bold', display: 'flex', alignItems: 'start', justifyContent: 'flex-start', fontSize: "15px",
               marginBottom: group.group === 'Others' ? '10px' : '0'
             }}>
+              <div style={{display:"flex" ,flexDirection :"column", gap:"20px" }}>
+                
               {group.group || null}
+
+        {
+group.group === "Disease" ? <ToggleCategory
+type="Disease"
+legendItems={legendItems}
+checkedClasses={checkedClasses}
+setCheckedClasses={setCheckedClasses}
+/> :  <ToggleCategory
+          type="Gene"
+          legendItems={legendItems}
+          checkedClasses={checkedClasses}
+          setCheckedClasses={setCheckedClasses}
+        />
+
+        }     
+              
+              </div>
             </dt>
             {group.items.map((item, index) => (
               <dd
