@@ -54,23 +54,7 @@ function App() {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      //   const uniqueDiseaseCategories = Array.from(new Set(jsonData
-      //     .filter(node => node.Disease_category) // Filter out nodes with a defined 'Disease_category'
-      //     .map(node => node.Disease_category) // Map to 'Disease_category'
-      // ));
-
-      // // Get unique 'Gene category'
-      // const uniqueGeneCategories = Array.from(new Set(jsonData
-      //     .filter(node => node['Gene category']) // Filter out nodes with a defined 'Gene category'
-      //     .map(node => node['Gene category']) // Map to 'Gene category'
-      // ));
-
-      // console.log("Unique Disease Categories:", uniqueDiseaseCategories);
-      // console.log("Unique Gene Categories:", uniqueGeneCategories);
-
       console.log(jsonData, "jsonData");
-
       setJsonData(jsonData);
       extractUniqueClasses(jsonData);
       setOriginalData(jsonData); // Extract unique classes after setting jsonData
@@ -89,8 +73,8 @@ function App() {
     });
     setUniqueClasses(Array.from(classes));
   };
-
   const createNodesAndLinks = (data) => {
+    let filteredRows = [] ;
     const nodesMap = new Map();
     const links = [];
 
@@ -100,8 +84,18 @@ function App() {
       const gene = row.Gene;
       const Phenotypes = row.Phenotypes;
       const class_disease = row.Disease_category;
-
       const class_gene = row["Gene category"];
+
+      if (checkedClasses[row.Disease_category]) {
+        filteredRows.push(row); // Add the entire row to the filteredRows array
+      }
+
+      // Update the state with the filtered rows
+      // SetDropDowndata(filteredRows);
+      extractUniqueClasses(filteredRows);
+
+
+
       if (disease && !nodesMap.has(disease)) {
         nodesMap.set(disease, {
           id: disease,
