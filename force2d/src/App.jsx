@@ -74,7 +74,7 @@ function App() {
     setUniqueClasses(Array.from(classes));
   };
   const createNodesAndLinks = (data) => {
-    let filteredRows = [] ;
+    let filteredRows = [];
     const nodesMap = new Map();
     const links = [];
 
@@ -93,8 +93,6 @@ function App() {
       // Update the state with the filtered rows
       // SetDropDowndata(filteredRows);
       extractUniqueClasses(filteredRows);
-
-
 
       if (disease && !nodesMap.has(disease)) {
         nodesMap.set(disease, {
@@ -127,7 +125,7 @@ function App() {
 
       // Add link from Disease to Gene
       if (disease && gene) {
-        links.push({ source: disease, target: gene , DOIs :row.DOIs });
+        links.push({ source: disease, target: gene, DOIs: row.DOIs });
       }
     });
 
@@ -196,7 +194,7 @@ function App() {
     <div className="app-container" style={{ padding: "2px", width: "100%" }}>
       <Row gutter={16}>
         {/* Legend with checkboxes */}
-        <Col span={4}  style={{ minWidth: '16%' }}>
+        <Col span={4} style={{ minWidth: "16%" }}>
           <Card
             title=""
             bordered
@@ -204,21 +202,18 @@ function App() {
               backgroundColor: "#ffffff",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               borderRadius: "8px",
-         
-              
             }}>
-            <Legend   
+            <Legend
               checkedClasses={checkedClasses}
               onClassChange={handleClassCheckboxChange}
               selectedValues={uniqueModes}
-              setCheckedClasses = {setCheckedClasses}
-              
+              setCheckedClasses={setCheckedClasses}
             />
           </Card>
         </Col>
 
         {/* 2D Force Network Graph */}
-        <Col span={19} style={{ minWidth: '60%' }}>
+        <Col span={19} style={{ minWidth: "65%" }}>
           <Card
             title={
               <div
@@ -253,7 +248,6 @@ function App() {
               backgroundColor: "#ffffff",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               borderRadius: "8px",
-              
             }}>
             {graphData.nodes.length > 0 && graphData.links.length > 0 ? (
               <ForceNetworkGraph
@@ -261,8 +255,14 @@ function App() {
                 links={graphData.links}
               />
             ) : (
-              
-              <p style={{ paddingRight:"45rem", width: "99%", overflow: "hidden" }}>No data in current filtration...</p>
+              <p
+                style={{
+                  paddingRight: "45rem",
+                  width: "99%",
+                  overflow: "hidden",
+                }}>
+                No data in current filtration...
+              </p>
             )}
           </Card>
         </Col>
