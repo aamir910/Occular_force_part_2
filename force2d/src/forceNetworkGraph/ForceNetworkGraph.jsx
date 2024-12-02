@@ -182,18 +182,23 @@ const DataTable = ({ node, onClose }) => {
           ) : (
             "N/A"
           );
-        } else if ( node.group === "link") {
-          // Split DOI entries by "; " and display each on a new line
-          console.log(text ,"text")
-          if(text){
-       
-            const doiList = text.split(";").map((doi, index) => (
-              <div key={index}>{doi.trim()}</div>
-            ));
+        } else if (node.group === "link") {
+          // Split DOI entries by "; " and display each on a new line as clickable links
+          if (text) {
+            const doiList = text.split(";").map((doi, index) => {
+              const trimmedDOI = doi.trim();
+              const doiLink = `https://doi.org/${trimmedDOI}`;
+              return (
+                <div key={index}>
+                  <a href={doiLink} target="_blank" rel="noopener noreferrer">
+                    {trimmedDOI}
+                  </a>
+                </div>
+              );
+            });
             return doiList.length ? doiList : "N/A";
-
           }
-        } else if (record.property === "Phenotypes") {
+        }else if (record.property === "Phenotypes") {
           return text || "N/A";
         }
         return text;

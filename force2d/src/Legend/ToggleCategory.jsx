@@ -1,7 +1,13 @@
-import React from 'react';
-import { Button } from 'antd';
+import React from "react";
+import { Button } from "antd";
 
-const ToggleCategory = ({ type, legendItems, checkedClasses, setCheckedClasses, children }) => {
+const ToggleCategory = ({
+  type,
+  legendItems,
+  checkedClasses,
+  setCheckedClasses,
+  children,
+}) => {
   // Function to select all items in the specified type
   const handleSelectAll = () => {
     const updatedClasses = { ...checkedClasses };
@@ -24,21 +30,20 @@ const ToggleCategory = ({ type, legendItems, checkedClasses, setCheckedClasses, 
     setCheckedClasses(updatedClasses);
   };
   const allSelected = legendItems
-  .find((group) => group.group === type)
-  ?.items.every((item) => checkedClasses[item.class]);
+    .find((group) => group.group === type)
+    ?.items.every((item) => checkedClasses[item.class]);
   return (
     <a
       onClick={() => {
         // Toggle behavior: if at least one item is unchecked, select all; otherwise, unselect all
- 
+
         if (allSelected) {
           handleUnselectAll();
         } else {
           handleSelectAll();
         }
-      }}
-    >
-             {allSelected ? "Unselect all":"Select all"  }
+      }}>
+      {allSelected ? "Unselect all" : "Select all"}
     </a>
   );
 };

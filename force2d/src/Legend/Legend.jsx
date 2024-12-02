@@ -9,8 +9,7 @@ const Legend = ({
   selectedValues,
   setCheckedClasses,
 }) => {
-
-  console.log(selectedValues , "selectedValues is here ")
+  console.log(selectedValues, "selectedValues is here ");
   const legendItems = [
     {
       group: "Disease",
@@ -93,6 +92,7 @@ const Legend = ({
           color: "brown",
           label: "Pseudogene",
           class: "Pseudogene",
+          
         },
         {
           shape: "circle",
@@ -125,19 +125,20 @@ const Legend = ({
     },
   ];
   console.log(selectedValues, "checkedClasses checkedClasses");
-  const filteredLegendItems = legendItems.map((group) => {
-    // if (group.group === "") {
+  const filteredLegendItems = legendItems.map(
+    (group) => {
+      // if (group.group === "") {
       return {
         ...group,
         items:
           selectedValues.length === 0
             ? group.items
-            : group.items.filter((item) => selectedValues.includes(item.label)),
+            : group.items,
       };
     }
     // return group;
-  // }
-);
+    // }
+  );
 
   return (
     <Row>
