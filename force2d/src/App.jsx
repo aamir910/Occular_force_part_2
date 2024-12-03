@@ -100,19 +100,6 @@ function App() {
       extractUniqueClasses(filteredRows);
 
 
-
-      // console.log(
-      //   expandedState[disease].visible ,
-      //   'expandedState["Repurposing Candidate"][disorder]'
-      // );
-
-      //  if ( gene && expandedState[gene] !== undefined) {
-      //     if (!expandedState[gene].visible) {
-      //       return;
-      //     }
-      //   }
-
-
         if ( disease && expandedState[disease] !== undefined) {
           if (!expandedState[disease].visible) {
             return;
@@ -123,9 +110,6 @@ function App() {
             return;
           }
         }
-    
-
-
 
 
       if (disease && !nodesMap.has(disease)) {
