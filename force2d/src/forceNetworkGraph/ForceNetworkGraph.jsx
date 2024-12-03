@@ -153,6 +153,45 @@ const ForceNetworkGraph = ({ nodes, links }) => {
   );
 };
 
+const renderPhenotypes = (text) => {
+  if (!text) return "N/A";
+
+  // Ensure text is properly parsed as a string
+  if (typeof text !== "string") {
+    console.error("Unexpected data format in Phenotypes:", text);
+    return "Invalid data";
+  }
+
+  // Split the string by ";"
+  const phenotypeArray = text.split(";");
+
+  // Process each phenotype
+  return phenotypeArray.map((item, index) => {
+    // Match OMIM entries in the item
+    const omimMatch = item.match(/OMIM:(\d+)/);
+
+    if (omimMatch) {
+      const omimId = omimMatch[1]; // Extract OMIM ID
+      const parts = item.split(`OMIM:${omimId}`); // Split the text into parts
+      return (
+        <div key={index}>
+          {parts[0]}{/* Render text before OMIM */}
+          <a
+            href={`https://omim.org/entry/${omimId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            OMIM:{omimId}
+          </a>
+          {parts[1]}{/* Render text after OMIM */}
+        </div>
+      );
+    }
+
+    return <div key={index}>{item}</div>; // Return item as-is if no OMIM link
+  });
+};
+
 // DataTable component to display node details
 
 const DataTable = ({ node, onClose }) => {
@@ -182,7 +221,7 @@ const DataTable = ({ node, onClose }) => {
           ) : (
             "N/A"
           );
-        } else if (node.group === "link") {
+        }else if (node.group === "link") {
           // Split DOI entries by "; " and display each on a new line as clickable links
           if (text) {
             const doiList = text.split(";").map((doi, index) => {
@@ -198,8 +237,17 @@ const DataTable = ({ node, onClose }) => {
             });
             return doiList.length ? doiList : "N/A";
           }
-        }else if (record.property === "Phenotypes") {
-          return text || "N/A";
+        }
+         else  if (record.property === "Phenotypes") {
+          return <div    style={{
+            maxHeight: "300px",
+            overflowY: "auto",
+            border: "1px solid #ddd",
+            padding: "10px",
+            borderRadius: "5px",
+            backgroundColor: "#f9f9f9",
+          }}
+          >{renderPhenotypes(text)}</div>;
         }
         return text;
       },
