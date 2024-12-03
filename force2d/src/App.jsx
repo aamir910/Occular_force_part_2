@@ -36,6 +36,8 @@ function App() {
     "RNA gene": true,
   });
 
+  const [expandedState, setExpandedState] = useState({});
+  
   const [uniqueClasses, setUniqueClasses] = useState([]);
   const [selectedValues, setSelectedValues] = useState([]);
   const [uniqueModes, setUniqueModes] = useState([]);
@@ -63,6 +65,7 @@ function App() {
     }
   };
 
+
   const extractUniqueClasses = (data) => {
     const classes = new Set();
     data.forEach((row) => {
@@ -73,6 +76,8 @@ function App() {
     });
     setUniqueClasses(Array.from(classes));
   };
+
+  console.log(graphData , "Graphdata")
   const createNodesAndLinks = (data) => {
     let filteredRows = [];
     const nodesMap = new Map();
@@ -93,6 +98,35 @@ function App() {
       // Update the state with the filtered rows
       // SetDropDowndata(filteredRows);
       extractUniqueClasses(filteredRows);
+
+
+
+      // console.log(
+      //   expandedState[disease].visible ,
+      //   'expandedState["Repurposing Candidate"][disorder]'
+      // );
+
+      //  if ( gene && expandedState[gene] !== undefined) {
+      //     if (!expandedState[gene].visible) {
+      //       return;
+      //     }
+      //   }
+
+
+        if ( disease && expandedState[disease] !== undefined) {
+          if (!expandedState[disease].visible) {
+            return;
+          }
+        }
+        if ( gene && expandedState[gene] !== undefined) {
+          if (!expandedState[gene].visible) {
+            return;
+          }
+        }
+    
+
+
+
 
       if (disease && !nodesMap.has(disease)) {
         nodesMap.set(disease, {
@@ -147,9 +181,45 @@ function App() {
       });
 
       const newGraphData = createNodesAndLinks(jsonData2);
+
+      
+      const initialState = newGraphData.nodes
+        .filter((item) => item.type === "Disease"  ||     item.type === "Gene"  ) 
+        .reduce((acc, item) => {
+          acc[item.id] = {
+            visible: true, // Visibility flag
+            label: item.class, // Store the label
+        type: item.type 
+
+          };
+          return acc;
+        }, {});
+
+      setExpandedState(initialState);
+      console.log("initialState" , initialState)
+
       setGraphData(newGraphData);
     }
   }, [jsonData, checkedClasses]);
+  useEffect(() => {
+    if (jsonData) {
+      let jsonData2 = jsonData.filter((row) => {
+        // Check if Disease category is selected (true in checkedClasses)
+        if (
+          checkedClasses[row.Disease_category] &&
+          checkedClasses[row["Gene category"]]
+        ) {
+          return true; // Keep the row if Disease is checked (true)
+        }
+        return false; // Exclude the row if neither is checked (false)
+      });
+
+      const newGraphData = createNodesAndLinks(jsonData2);
+
+
+      setGraphData(newGraphData);
+    }
+  }, [jsonData, checkedClasses ,expandedState]);
 
   const handleSelectionChange = (value) => {
     setSelectedValues(value);
@@ -208,6 +278,9 @@ function App() {
               onClassChange={handleClassCheckboxChange}
               selectedValues={uniqueModes}
               setCheckedClasses={setCheckedClasses}
+              expandedState={expandedState}
+              setExpandedState={setExpandedState}
+
             />
           </Card>
         </Col>

@@ -1,14 +1,24 @@
-import React from "react";
-import { Row, Col, Checkbox } from "antd";
+import {React ,useState} from "react";
+import { Row, Col, Checkbox ,Input} from "antd";
 
 import ToggleCategory from "./ToggleCategory";
+
 
 const Legend = ({
   checkedClasses,
   onClassChange,
   selectedValues,
   setCheckedClasses,
+  expandedState , 
+  setExpandedState
+
 }) => {
+
+
+  console.log(expandedState , "expandedState")
+  const [expandedClasses, setExpandedClasses] = useState({}); // For expanding/collapsing subgroups
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+
   console.log(selectedValues, "selectedValues is here ");
   const legendItems = [
     {
@@ -139,6 +149,14 @@ const Legend = ({
     // return group;
     // }
   );
+    // Toggle expansion for a parent class
+    const toggleExpand = (className) => {
+      setExpandedClasses((prev) => ({
+        ...prev,
+        [className]: !prev[className],
+      }));
+    };
+  
 
   return (
     <Row>
@@ -192,6 +210,16 @@ const Legend = ({
                   justifyContent: "flex-start",
                   marginLeft: 0,
                 }}>
+
+  <div
+                    style={{ cursor: "pointer", marginRight: "8px" }}
+                    onClick={() => toggleExpand(item.class)}>
+                    {expandedClasses[item.class] ? "▼" : "▶"}
+                  </div> 
+
+
+
+
                 {item.shape === "triangle" && (
                   <>
                     <svg width="20" height="20" style={{ marginRight: "2px" }}>
@@ -205,6 +233,120 @@ const Legend = ({
                       }
                       style={{ marginLeft: "2px" }}
                     />
+                     <div style={{ display: "flex", flexDirection: "column" , maxWidth:"200px" }}>
+         {/* Subgroup Rendering */}
+         {expandedClasses[item.class] && (
+           <div style={{ marginTop: "10px", width: "100%" }}>
+             {/* Search Input */}
+             <Input
+               placeholder="Search..."
+               style={{ marginBottom: "10px", maxWidth: "250px" }}
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+             />
+       
+             {/* Select All / Unselect All Buttons */}
+             <div style={{ marginBottom: "10px", display: "flex", gap: "10px" }}>
+               <button
+                 style={{
+                   padding: "5px 10px",
+                   borderRadius: "5px",
+                   backgroundColor: "#1890ff",
+                   color: "#fff",
+                   border: "none",
+                   cursor: "pointer",
+                 }}
+                 onClick={() => {
+                   // Select All
+                   const filteredItems = Object.entries(expandedState).filter(
+                     ([id, details]) =>
+                       details.label === item.label &&
+                       id.toLowerCase().includes(searchQuery)
+                   );
+                   setExpandedState((prevState) => {
+                     const updatedState = { ...prevState };
+                     filteredItems.forEach(([id]) => {
+                       updatedState[id].visible = true; // Set all to visible
+                     });
+                     return updatedState;
+                   });
+                 }}>
+                 Select All
+               </button>
+               <button
+                 style={{
+                   padding: "5px 10px",
+                   borderRadius: "5px",
+                   backgroundColor: "#ff4d4f",
+                   color: "#fff",
+                   border: "none",
+                   cursor: "pointer",
+                 }}
+                 onClick={() => {
+                   // Unselect All
+                   const filteredItems = Object.entries(expandedState).filter(
+                     ([id, details]) =>
+                       details.label === item.label &&
+                       id.toLowerCase().includes(searchQuery)
+                   );
+                   setExpandedState((prevState) => {
+                     const updatedState = { ...prevState };
+                     filteredItems.forEach(([id]) => {
+                       updatedState[id].visible = false; // Set all to invisible
+                     });
+                     return updatedState;
+                   });
+                 }}>
+                 Unselect All
+               </button>
+             </div>
+       
+             {/* List */}
+             <ul
+               style={{
+                 marginTop: "2px",
+                 maxHeight: "300px",
+                 overflowY: "auto",
+                 border: "1px solid #d9d9d9",
+                 borderRadius: "5px",
+                 // backgroundColor: "#f9f9f9",
+                 maxWidth: "250px",
+               }}>
+               {Object.entries(expandedState) // Convert top-level object to array of [id, details] pairs
+                 .filter(
+                   ([id, details]) =>
+                     details.label === item.label &&
+                     id.toLowerCase().includes(searchQuery) // Filter based on search query
+                 )
+                 .map(([id, details]) => (
+                   <li
+                     key={id}
+                     style={{
+                       listStyle: "none",
+                       borderBottom: "1px solid #e8e8e8",
+                     }}>
+                     <Checkbox
+                       checked={details.visible} // Bind to the `visible` property
+                       onChange={(e) => {
+                         const isChecked = e.target.checked;
+       
+                         // Update the state using setExpandedState
+                         setExpandedState((prevState) => ({
+                           ...prevState,
+                           [id]: {
+                             ...prevState[id],
+                             visible: isChecked, // Update the visibility for the specific id
+                           },
+                         }));
+                       }}>
+                       {id}
+                     </Checkbox>
+                   </li>
+                 ))}
+             </ul>
+           </div>
+         )}
+       </div> 
                   </>
                 )}
                 {item.shape === "circle" && (
@@ -222,6 +364,124 @@ const Legend = ({
                       }
                       style={{ marginLeft: "2px" }}
                     />
+
+
+
+         <div style={{ display: "flex", flexDirection: "column" , maxWidth:"200px" }}>
+         {/* Subgroup Rendering */}
+         {expandedClasses[item.class] && (
+           <div style={{ marginTop: "10px", width: "100%" }}>
+             {/* Search Input */}
+             <Input
+               placeholder="Search..."
+               style={{ marginBottom: "10px", maxWidth: "250px" }}
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+             />
+       
+             {/* Select All / Unselect All Buttons */}
+             <div style={{ marginBottom: "10px", display: "flex", gap: "10px" }}>
+               <button
+                 style={{
+                   padding: "5px 10px",
+                   borderRadius: "5px",
+                   backgroundColor: "#1890ff",
+                   color: "#fff",
+                   border: "none",
+                   cursor: "pointer",
+                 }}
+                 onClick={() => {
+                   // Select All
+                   const filteredItems = Object.entries(expandedState).filter(
+                     ([id, details]) =>
+                       details.label === item.label &&
+                       id.toLowerCase().includes(searchQuery)
+                   );
+                   setExpandedState((prevState) => {
+                     const updatedState = { ...prevState };
+                     filteredItems.forEach(([id]) => {
+                       updatedState[id].visible = true; // Set all to visible
+                     });
+                     return updatedState;
+                   });
+                 }}>
+                 Select All
+               </button>
+               <button
+                 style={{
+                   padding: "5px 10px",
+                   borderRadius: "5px",
+                   backgroundColor: "#ff4d4f",
+                   color: "#fff",
+                   border: "none",
+                   cursor: "pointer",
+                 }}
+                 onClick={() => {
+                   // Unselect All
+                   const filteredItems = Object.entries(expandedState).filter(
+                     ([id, details]) =>
+                       details.label === item.label &&
+                       id.toLowerCase().includes(searchQuery)
+                   );
+                   setExpandedState((prevState) => {
+                     const updatedState = { ...prevState };
+                     filteredItems.forEach(([id]) => {
+                       updatedState[id].visible = false; // Set all to invisible
+                     });
+                     return updatedState;
+                   });
+                 }}>
+                 Unselect All
+               </button>
+             </div>
+       
+             {/* List */}
+             <ul
+               style={{
+                 marginTop: "2px",
+                 maxHeight: "300px",
+                 overflowY: "auto",
+                 border: "1px solid #d9d9d9",
+                 borderRadius: "5px",
+                 // backgroundColor: "#f9f9f9",
+                 maxWidth: "250px",
+               }}>
+               {Object.entries(expandedState) // Convert top-level object to array of [id, details] pairs
+                 .filter(
+                   ([id, details]) =>
+                     details.label === item.label &&
+                     id.toLowerCase().includes(searchQuery) // Filter based on search query
+                 )
+                 .map(([id, details]) => (
+                   <li
+                     key={id}
+                     style={{
+                       listStyle: "none",
+                       borderBottom: "1px solid #e8e8e8",
+                     }}>
+                     <Checkbox
+                       checked={details.visible} // Bind to the `visible` property
+                       onChange={(e) => {
+                         const isChecked = e.target.checked;
+       
+                         // Update the state using setExpandedState
+                         setExpandedState((prevState) => ({
+                           ...prevState,
+                           [id]: {
+                             ...prevState[id],
+                             visible: isChecked, // Update the visibility for the specific id
+                           },
+                         }));
+                       }}>
+                       {id}
+                     </Checkbox>
+                   </li>
+                 ))}
+             </ul>
+           </div>
+         )}
+       </div>
+
                   </>
                 )}
 

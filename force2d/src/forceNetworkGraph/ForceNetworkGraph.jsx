@@ -6,12 +6,6 @@ const ForceNetworkGraph = ({ nodes, links }) => {
   const graphRef = useRef();
   const [selectedNode, setSelectedNode] = useState(null); // State to manage selected node
 
-
-
-
-
-
-
   // Prepare graph data format for ForceGraph
   const graphData = useMemo(
     () => ({
@@ -31,14 +25,13 @@ const ForceNetworkGraph = ({ nodes, links }) => {
         ClinVar: node.ClinVar,
         Decipher: node.Decipher,
         gnomAD: node.gnomAD,
-        PanelApp: node.PanelApp
-
+        PanelApp: node.PanelApp,
       })),
       links: links.map((link) => ({
         source: link.source,
         target: link.target,
-        DOIs : link.DOIs ,
-        group :"link"
+        DOIs: link.DOIs,
+        group: "link",
       })),
     }),
     [nodes, links]
@@ -147,7 +140,12 @@ const ForceNetworkGraph = ({ nodes, links }) => {
         }}
       />
       {selectedNode && (
-        <DataTable node={selectedNode} onClose={() => setSelectedNode(null)}   size="small"       className="compact-table"/>
+        <DataTable
+          node={selectedNode}
+          onClose={() => setSelectedNode(null)}
+          size="small"
+          className="compact-table"
+        />
       )}
     </div>
   );
@@ -175,15 +173,16 @@ const renderPhenotypes = (text) => {
       const parts = item.split(`OMIM:${omimId}`); // Split the text into parts
       return (
         <div key={index}>
-          {parts[0]}{/* Render text before OMIM */}
+          {parts[0]}
+          {/* Render text before OMIM */}
           <a
             href={`https://omim.org/entry/${omimId}`}
             target="_blank"
-            rel="noopener noreferrer"
-          >
+            rel="noopener noreferrer">
             OMIM:{omimId}
           </a>
-          {parts[1]}{/* Render text after OMIM */}
+          {parts[1]}
+          {/* Render text after OMIM */}
         </div>
       );
     }
@@ -195,7 +194,6 @@ const renderPhenotypes = (text) => {
 // DataTable component to display node details
 
 const DataTable = ({ node, onClose }) => {
-
   // Define the columns for the Ant Design table
   const columns = [
     {
@@ -212,7 +210,11 @@ const DataTable = ({ node, onClose }) => {
       key: "value",
       render: (text, record) => {
         // Check if the property should be clickable
-        if (["ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(record.property)) {
+        if (
+          ["ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(
+            record.property
+          )
+        ) {
           const url = node[record.property];
           return url ? (
             <a href={url} target="_blank" rel="noopener noreferrer">
@@ -221,7 +223,7 @@ const DataTable = ({ node, onClose }) => {
           ) : (
             "N/A"
           );
-        }else if (node.group === "link") {
+        } else if (node.group === "link") {
           // Split DOI entries by "; " and display each on a new line as clickable links
           if (text) {
             const doiList = text.split(";").map((doi, index) => {
@@ -237,17 +239,20 @@ const DataTable = ({ node, onClose }) => {
             });
             return doiList.length ? doiList : "N/A";
           }
-        }
-         else  if (record.property === "Phenotypes") {
-          return <div    style={{
-            maxHeight: "300px",
-            overflowY: "auto",
-            border: "1px solid #ddd",
-            padding: "10px",
-            borderRadius: "5px",
-            backgroundColor: "#f9f9f9",
-          }}
-          >{renderPhenotypes(text)}</div>;
+        } else if (record.property === "Phenotypes") {
+          return (
+            <div
+              style={{
+                maxHeight: "300px",
+                overflowY: "auto",
+                border: "1px solid #ddd",
+                padding: "10px",
+                borderRadius: "5px",
+                backgroundColor: "#f9f9f9",
+              }}>
+              {renderPhenotypes(text)}
+            </div>
+          );
         }
         return text;
       },
@@ -261,10 +266,8 @@ const DataTable = ({ node, onClose }) => {
     dataSource = [
       { key: "Phenotypes", property: "Phenotypes", value: node.Phenotypes },
     ];
-  } else if (node.group === "link" ) {
-    dataSource = [
-      { key: "DOIs", property: "DOIs", value: node.DOIs },
-    ];
+  } else if (node.group === "link") {
+    dataSource = [{ key: "DOIs", property: "DOIs", value: node.DOIs }];
   } else {
     dataSource = [
       { key: "Gene", property: "Gene", value: node.Gene },
@@ -300,13 +303,17 @@ const DataTable = ({ node, onClose }) => {
         width: "auto",
       }}>
       <h2>{node.id}</h2>
-      <Table columns={columns} dataSource={dataSource} pagination={false} size="small" />
+      <Table
+        columns={columns}
+        dataSource={dataSource}
+        pagination={false}
+        size="small"
+      />
       <Button type="primary" onClick={onClose} style={{ marginTop: "10px" }}>
         Close
       </Button>
     </div>
   );
 };
-
 
 export default ForceNetworkGraph;
