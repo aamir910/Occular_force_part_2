@@ -280,7 +280,7 @@ function App() {
                   alignItems: "center",
                 }}>
                 <span>Anatomy based categorization</span>
-                <div>
+                {/* <div>
                   <Select
                     mode="multiple"
                     placeholder="Select disease"
@@ -297,7 +297,7 @@ function App() {
                     ))}
                   </Select>
                   <Button onClick={applyFilter}>Filter</Button>
-                </div>
+                </div> */}
               </div>
             }
             bordered
