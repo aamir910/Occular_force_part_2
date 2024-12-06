@@ -107,7 +107,7 @@ const ForceNetworkGraph = ({ nodes, links }) => {
     // Optional: Add node ID label next to each node
     ctx.fillStyle = "black";
     ctx.font = "10px Arial";
-    ctx.fillText(node.id, node.x + shapeSize + 5, node.y);
+    // ctx.fillText(node.id, node.x + shapeSize + 5, node.y);
   };
 
   // Handle node click to set selected node
