@@ -279,7 +279,7 @@ function App() {
                   justifyContent: "space-between",
                   alignItems: "center",
                 }}>
-                <span>Anatomy Gene based categorization</span>
+                <span>Anatomy gene based categorization</span>
                 {/* <div>
                   <Select
                     mode="multiple"
