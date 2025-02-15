@@ -248,7 +248,7 @@ function App() {
     <div className="app-container" style={{ padding: "2px", width: "100%" }}>
       <Row gutter={16}>
         {/* Legend with checkboxes */}
-        <Col span={4} style={{ minWidth: "16%" }}>
+        <Col span={5} style={{ minWidth: "16%" }}>
           <Card
             title=""
             bordered
@@ -270,7 +270,7 @@ function App() {
         </Col>
 
         {/* 2D Force Network Graph */}
-        <Col span={19} style={{ minWidth: "65%" }}>
+        <Col span={18} style={{ minWidth: "65%" }}>
           <Card
             title={
               <div
