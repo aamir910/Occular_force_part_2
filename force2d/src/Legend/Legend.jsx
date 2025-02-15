@@ -141,12 +141,12 @@ const Legend = ({
   };
 
   return (
-    <Row style={{ 
-      maxHeight: "100vh", 
-      overflowY: "auto",
-      scrollbarWidth: "thin",
-      scrollbarColor: "#888 #f1f1f1" 
-    }}>
+        <Row style={{ 
+          maxHeight: "100vh", 
+          overflowY: "auto",
+          scrollbarWidth: "thin",
+          scrollbarColor: "#888 #f1f1f1" 
+        }}>
       {filteredLegendItems.map((group, groupIndex) => (
         <Col
           key={groupIndex}
