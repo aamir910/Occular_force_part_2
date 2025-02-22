@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import * as XLSX from "xlsx";
 import { Card, Select, Row, Col, Button, Modal } from "antd";
 import html2canvas from "html2canvas";
+import { saveAs } from 'file-saver';
 import ForceNetworkGraph from "./forceNetworkGraph/ForceNetworkGraph";
 import Legend from "./Legend/Legend";
 
@@ -162,7 +163,6 @@ function App() {
     }));
   };
 
-  // New function to handle filter data from Legend
   const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
     if (jsonData) {
       let jsonData2 = jsonData.filter((row) => {
@@ -219,13 +219,8 @@ function App() {
   const exportToExcel = () => {
     if (jsonData) {
       const jsonData2 = jsonData.filter((row) => {
-        if (
-          checkedClasses[row.Disease_category] &&
-          checkedClasses[row["Gene category"]]
-        ) {
-          return true;
-        }
-        return false;
+        return checkedClasses[row.Disease_category] && 
+               checkedClasses[row["Gene category"]];
       });
 
       if (jsonData2.length > 0) {
@@ -236,17 +231,35 @@ function App() {
       } else {
         console.log("No filtered data to export.");
       }
-    } else {
-      console.log("No data available to export.");
     }
   };
 
-  const takeScreenshot = async () => {
+  const exportGraphImage = async (format) => {
     if (rowRef.current) {
       const canvas = await html2canvas(rowRef.current);
-      const dataURL = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.download = "graph_screenshot.png";
+      let filename, dataURL;
+      
+      switch(format) {
+        case 'png':
+          filename = 'graph_screenshot.png';
+          dataURL = canvas.toDataURL('image/png');
+          break;
+        case 'jpg':
+          filename = 'graph_screenshot.jpg';
+          dataURL = canvas.toDataURL('image/jpeg');
+          break;
+        case 'svg':
+          filename = 'graph_screenshot.svg';
+          const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}"><image width="${canvas.width}" height="${canvas.height}" href="${canvas.toDataURL('image/png')}"/></svg>`;
+          const blob = new Blob([svgData], { type: 'image/svg+xml' });
+          saveAs(blob, filename);
+          return;
+        default:
+          return;
+      }
+      
+      const link = document.createElement('a');
+      link.download = filename;
       link.href = dataURL;
       link.click();
     } else {
@@ -274,7 +287,7 @@ function App() {
               setCheckedClasses={setCheckedClasses}
               expandedState={expandedState}
               setExpandedState={setExpandedState}
-              onFilterData={handleFilterData} // Pass the filter handler
+              onFilterData={handleFilterData}
             />
           </Card>
         </Col>
@@ -323,21 +336,52 @@ function App() {
       </Row>
 
       <Modal
-        title="Additional Actions"
+        title="Export Options"
         open={isBoxOpen}
         onCancel={handleCloseBox}
         footer={null}
       >
-        <Button type="primary" onClick={exportToExcel}>
-          Export to Excel
-        </Button>
-        <Button
-          type="primary"
-          style={{ marginLeft: "10px" }}
-          onClick={takeScreenshot}
+        <div 
+          style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '10px',
+            alignItems: 'center'
+          }}
         >
-          Take Screenshot
-        </Button>
+          <Button 
+            type="primary" 
+            size="small"
+            style={{ width: '150px' }}  // Fixed width for all buttons
+            onClick={exportToExcel}
+          >
+            Export to Excel
+          </Button>
+          <Button 
+            type="primary" 
+            size="small"
+            style={{ width: '150px' }}  // Fixed width for all buttons
+            onClick={() => exportGraphImage('png')}
+          >
+            Download as PNG
+          </Button>
+          <Button 
+            type="primary" 
+            size="small"
+            style={{ width: '150px' }}  // Fixed width for all buttons
+            onClick={() => exportGraphImage('jpg')}
+          >
+            Download as JPG
+          </Button>
+          <Button 
+            type="primary" 
+            size="small"
+            style={{ width: '150px' }}  // Fixed width for all buttons
+            onClick={() => exportGraphImage('svg')}
+          >
+            Download as SVG
+          </Button>
+        </div>
       </Modal>
     </div>
   );

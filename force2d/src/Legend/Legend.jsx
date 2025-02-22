@@ -93,7 +93,7 @@ const Legend = ({
           style={{ width: "50%", maxWidth: "250px" }}
         >
           Filter Data
-        </Button>
+        </Button>   
       </Col>
 
       {filteredLegendItems.map((group, groupIndex) => (
