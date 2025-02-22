@@ -139,14 +139,7 @@ const ForceNetworkGraph = ({ nodes, links }) => {
           return `<div style="background-color: black; color: white; padding: 5px; border-radius: 4px;">${node.id}</div>`;
         }}
       />
-      {selectedNode && (
-        <DataTable
-          node={selectedNode}
-          onClose={() => setSelectedNode(null)}
-          size="small"
-          className="compact-table"
-        />
-      )}
+      {selectedNode && <DataTable node={selectedNode} onClose={() => setSelectedNode(null)} />}
     </div>
   );
 };
@@ -175,10 +168,7 @@ const renderPhenotypes = (text) => {
         <div key={index}>
           {parts[0]}
           {/* Render text before OMIM */}
-          <a
-            href={`https://omim.org/entry/${omimId}`}
-            target="_blank"
-            rel="noopener noreferrer">
+          <a href={`https://omim.org/entry/${omimId}`} target="_blank" rel="noopener noreferrer">
             OMIM:{omimId}
           </a>
           {parts[1]}
@@ -192,7 +182,6 @@ const renderPhenotypes = (text) => {
 };
 
 // DataTable component to display node details
-
 const DataTable = ({ node, onClose }) => {
   // Define the columns for the Ant Design table
   const columns = [
@@ -210,11 +199,7 @@ const DataTable = ({ node, onClose }) => {
       key: "value",
       render: (text, record) => {
         // Check if the property should be clickable
-        if (
-          ["ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(
-            record.property
-          )
-        ) {
+        if (["ClinVar", "Decipher", "gnomAD", "PanelApp"].includes(record.property)) {
           const url = node[record.property];
           return url ? (
             <a href={url} target="_blank" rel="noopener noreferrer">
@@ -249,12 +234,13 @@ const DataTable = ({ node, onClose }) => {
                 padding: "10px",
                 borderRadius: "5px",
                 backgroundColor: "#f9f9f9",
-              }}>
+              }}
+            >
               {renderPhenotypes(text)}
             </div>
           );
         }
-        return text;
+        return text || "N/A"; // Default to "N/A" if value is undefined or empty
       },
     },
   ];
@@ -277,14 +263,21 @@ const DataTable = ({ node, onClose }) => {
       { key: "Description", property: "Description", value: node.Description },
       { key: "OMIM", property: "OMIM", value: node.OMIM },
       { key: "Ensembl", property: "Ensembl", value: node.Ensembl },
-      { key: "ClinVar", property: "ClinVar", value: "click here" },
-      { key: "Decipher", property: "Decipher", value: "click here" },
-      { key: "gnomAD", property: "gnomAD", value: "click here" },
-      { key: "PanelApp", property: "PanelApp", value: "click here" },
+      { key: "ClinVar", property: "ClinVar", value: node.ClinVar },
+      { key: "Decipher", property: "Decipher", value: node.Decipher },
+      { key: "gnomAD", property: "gnomAD", value: node.gnomAD },
+      { key: "PanelApp", property: "PanelApp", value: node.PanelApp },
     ];
   }
 
-  return (
+  // Check if all values in dataSource are undefined, empty, or "N/A"
+  const hasValidData = dataSource.some((item) => {
+    const value = item.value;
+    return value !== undefined && value !== "" && value !== null && value !== "N/A";
+  });
+
+  // Only render the table if there is at least one valid value
+  return hasValidData ? (
     <div
       style={{
         display: "flex",
@@ -301,19 +294,15 @@ const DataTable = ({ node, onClose }) => {
         boxShadow: "0px 0px 10px rgba(0,0,0,0.2)",
         zIndex: 10,
         width: "auto",
-      }}>
+      }}
+    >
       <h2>{node.id}</h2>
-      <Table
-        columns={columns}
-        dataSource={dataSource}
-        pagination={false}
-        size="small"
-      />
+      <Table columns={columns} dataSource={dataSource} pagination={false} size="small" />
       <Button type="primary" onClick={onClose} style={{ marginTop: "10px" }}>
         Close
       </Button>
     </div>
-  );
+  ) : null; // Return null if no valid data
 };
 
 export default ForceNetworkGraph;
