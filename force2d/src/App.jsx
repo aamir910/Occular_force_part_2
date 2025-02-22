@@ -52,7 +52,6 @@ function App() {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      console.log(jsonData, "jsonData");
       setJsonData(jsonData);
       extractUniqueClasses(jsonData);
       setOriginalData(jsonData);
@@ -72,13 +71,11 @@ function App() {
     setUniqueClasses(Array.from(classes));
   };
 
-  console.log(graphData, "Graphdata");
   const createNodesAndLinks = (data) => {
     let filteredRows = [];
     const nodesMap = new Map();
     const links = [];
 
-    console.log(data);
     data.forEach((row) => {
       const disease = row.Disease;
       const gene = row.Gene;
@@ -142,18 +139,7 @@ function App() {
 
   useEffect(() => {
     if (jsonData) {
-      let jsonData2 = jsonData.filter((row) => {
-        if (
-          checkedClasses[row.Disease_category] &&
-          checkedClasses[row["Gene category"]]
-        ) {
-          return true;
-        }
-        return false;
-      });
-
-      const newGraphData = createNodesAndLinks(jsonData2);
-
+      const newGraphData = createNodesAndLinks(jsonData);
       const initialState = newGraphData.nodes
         .filter((item) => item.type === "Disease" || item.type === "Gene")
         .reduce((acc, item) => {
@@ -164,40 +150,37 @@ function App() {
           };
           return acc;
         }, {});
-
       setExpandedState(initialState);
-      console.log("initialState", initialState);
-
       setGraphData(newGraphData);
     }
-  }, [jsonData, checkedClasses]);
-
-  useEffect(() => {
-    if (jsonData) {
-      let jsonData2 = jsonData.filter((row) => {
-        if (
-          checkedClasses[row.Disease_category] &&
-          checkedClasses[row["Gene category"]]
-        ) {
-          return true;
-        }
-        return false;
-      });
-
-      const newGraphData = createNodesAndLinks(jsonData2);
-      setGraphData(newGraphData);
-    }
-  }, [jsonData, checkedClasses, expandedState]);
-
-  const handleSelectionChange = (value) => {
-    setSelectedValues(value);
-  };
+  }, [jsonData]);
 
   const handleClassCheckboxChange = (className, checked) => {
     setCheckedClasses((prevCheckedClasses) => ({
       ...prevCheckedClasses,
       [className]: checked,
     }));
+  };
+
+  // New function to handle filter data from Legend
+  const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
+    if (jsonData) {
+      let jsonData2 = jsonData.filter((row) => {
+        const diseaseCategory = row.Disease_category;
+        const geneCategory = row["Gene category"];
+        return (
+          selectedClasses.includes(diseaseCategory) &&
+          selectedClasses.includes(geneCategory)
+        );
+      });
+
+      const newGraphData = createNodesAndLinks(jsonData2);
+      setGraphData(newGraphData);
+    }
+  };
+
+  const handleSelectionChange = (value) => {
+    setSelectedValues(value);
   };
 
   const applyFilter = () => {
@@ -218,7 +201,6 @@ function App() {
           ];
           setUniqueModes(uniqueModesArray);
         }
-        console.log(selectedValues, "selectedValues");
       } else {
         setJsonData(originalData);
         setUniqueModes([]);
@@ -236,7 +218,6 @@ function App() {
 
   const exportToExcel = () => {
     if (jsonData) {
-      // Compute filtered jsonData2 locally based on current checkedClasses
       const jsonData2 = jsonData.filter((row) => {
         if (
           checkedClasses[row.Disease_category] &&
@@ -293,6 +274,7 @@ function App() {
               setCheckedClasses={setCheckedClasses}
               expandedState={expandedState}
               setExpandedState={setExpandedState}
+              onFilterData={handleFilterData} // Pass the filter handler
             />
           </Card>
         </Col>
@@ -309,7 +291,7 @@ function App() {
               >
                 <span>Anatomy gene based categorization</span>
                 <Button type="primary" onClick={handleOpenBox}>
-                  Exports
+                  Export
                 </Button>
               </div>
             }
