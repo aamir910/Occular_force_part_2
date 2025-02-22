@@ -1,6 +1,6 @@
 
 import { React, useState } from "react";
-import { Row, Col, Checkbox, Input } from "antd";
+import {  Row, Col, Checkbox, Input } from "antd";
 import ToggleCategory from "./ToggleCategory";
 
 const Legend = ({
