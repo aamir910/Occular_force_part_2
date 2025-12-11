@@ -47,7 +47,7 @@ function App() {
 
   const fetchExcelFile = async () => {
     try {
-      const response = await fetch("/Gene_Disease_final_file.xlsx");
+      const response = await fetch("/Gene_Disease_final_file_merged.xlsx");
       const data = await response.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
