@@ -46,6 +46,17 @@ const Legend = ({
         { shape: "circle", color: "pink", label: "RNA gene", class: "RNA gene" },
       ],
     },
+    {
+      group: "Drug",
+      items: [
+        { shape: "square", color: "#FF6B6B", label: "Phase 0", class: "0" },
+        { shape: "square", color: "#4ECDC4", label: "Phase 1", class: "1" },
+        { shape: "square", color: "#45B7D1", label: "Phase 2", class: "2" },
+        { shape: "square", color: "#96CEB4", label: "Phase 3", class: "3" },
+        { shape: "square", color: "#FFEAA7", label: "Phase 4", class: "4" },
+        { shape: "square", color: "#DDA0DD", label: "Phase 5", class: "5" },
+      ],
+    },
   ];
 
   const filteredLegendItems = legendItems.map((group) => ({
@@ -63,7 +74,7 @@ const Legend = ({
     legendItems.forEach(group => {
       group.items.forEach(item => {
         const relatedExpandedItems = Object.entries(expandedState).filter(
-          ([_, details]) => details.label === item.label
+          ([_, details]) => String(details.label) === String(item.class)
         );
 
         if (relatedExpandedItems.length > 0) {
@@ -110,7 +121,7 @@ const Legend = ({
       setExpandedState(prev => {
         const updated = { ...prev };
         Object.entries(updated).forEach(([id, details]) => {
-          if (details.label === targetItem.label) {
+          if (String(details.label) === String(targetItem.class)) {
             updated[id] = { ...details, visible: checked };
           }
         });
@@ -251,6 +262,22 @@ const Legend = ({
                     </>
                   )}
 
+                  {item.shape === "square" && (
+                    <>
+                      <div style={{ margin: "5px" }}>
+                        <svg width="20" height="20" style={{ marginRight: "2px", marginTop: "5px" }}>
+                          <rect x="0" y="0" width="20" height="20" fill={item.color} />
+                        </svg>
+                      </div>
+                      <Checkbox
+                        checked={checkedClasses[item.class]}
+                        indeterminate={indeterminateState[item.class]} // Add indeterminate prop
+                        onChange={(e) => handleMainCategoryChange(item.class, e.target.checked)}
+                        style={{ marginLeft: "2px" }}
+                      />
+                    </>
+                  )}
+
                   <div style={{ marginLeft: "3px" }}>{item.label}</div>
                 </div>
 
@@ -288,7 +315,7 @@ const Legend = ({
                           const currentQuery = searchQueries[item.class] || "";
                           const filteredItems = Object.entries(expandedState)
                             .filter(([id, details]) =>
-                              details.label === item.label &&
+                              String(details.label) === String(item.class) &&
                               id.toLowerCase().includes(currentQuery)
                             );
 
@@ -316,7 +343,7 @@ const Legend = ({
                           const currentQuery = searchQueries[item.class] || "";
                           const filteredItems = Object.entries(expandedState)
                             .filter(([id, details]) =>
-                              details.label === item.label &&
+                              String(details.label) === String(item.class) &&
                               id.toLowerCase().includes(currentQuery)
                             );
 
@@ -348,7 +375,7 @@ const Legend = ({
                         .filter(([id, details]) => {
                           const currentQuery = searchQueries[item.class] || "";
                           return (
-                            details.label === item.label &&
+                            String(details.label) === String(item.class) &&
                             id.toLowerCase().includes(currentQuery)
                           );
                         })

@@ -31,6 +31,12 @@ function App() {
     Other: true,
     "Protein coding": true,
     "RNA gene": true,
+    "0": true,
+    "1": true,
+    "2": true,
+    "3": true,
+    "4": true,
+    "5": true,
   });
 
   const [expandedState, setExpandedState] = useState({});
@@ -47,12 +53,13 @@ function App() {
 
   const fetchExcelFile = async () => {
     try {
-      const response = await fetch("/Gene_Disease_final_file_merged.xlsx");
+      const response = await fetch("/Gene_Disease_final_file_merged_2.xlsx");
       const data = await response.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      console.log("Excel data loaded:", jsonData);
       setJsonData(jsonData);
       extractUniqueClasses(jsonData);
       setOriginalData(jsonData);
@@ -80,15 +87,11 @@ function App() {
     data.forEach((row) => {
       const disease = row.Disease;
       const gene = row.Gene;
+      const drug = row.Drug_name;
       const Phenotypes = row.Phenotypes;
       const class_disease = row.Disease_category;
       const class_gene = row["Gene category"];
-
-      if (checkedClasses[row.Disease_category]) {
-        filteredRows.push(row);
-      }
-
-      extractUniqueClasses(filteredRows);
+      const class_drug = row.Phase;
 
       if (disease && expandedState[disease] !== undefined) {
         if (!expandedState[disease].visible) {
@@ -97,6 +100,11 @@ function App() {
       }
       if (gene && expandedState[gene] !== undefined) {
         if (!expandedState[gene].visible) {
+          return;
+        }
+      }
+      if (drug && expandedState[drug] !== undefined) {
+        if (!expandedState[drug].visible) {
           return;
         }
       }
@@ -130,8 +138,21 @@ function App() {
         });
       }
 
+      if (drug && !nodesMap.has(drug)) {
+        nodesMap.set(drug, {
+          id: drug,
+          type: "Drug",
+          class: class_drug,
+          Drug_name: drug,
+          Phase: row.Phase,
+        });
+      }
+
       if (disease && gene) {
         links.push({ source: disease, target: gene, DOIs: row.DOIs });
+      }
+      if (disease && drug) {
+        links.push({ source: disease, target: drug, DOIs: row.DOIs });
       }
     });
 
@@ -142,7 +163,7 @@ function App() {
     if (jsonData) {
       const newGraphData = createNodesAndLinks(jsonData);
       const initialState = newGraphData.nodes
-        .filter((item) => item.type === "Disease" || item.type === "Gene")
+        .filter((item) => item.type === "Disease" || item.type === "Gene" || item.type === "Drug")
         .reduce((acc, item) => {
           acc[item.id] = {
             visible: true,
@@ -153,6 +174,7 @@ function App() {
         }, {});
       setExpandedState(initialState);
       setGraphData(newGraphData);
+      console.log("Graph data initialized:", newGraphData); 
     }
   }, [jsonData]);
 
@@ -163,21 +185,104 @@ function App() {
     }));
   };
 
-  const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
-    if (jsonData) {
-      let jsonData2 = jsonData.filter((row) => {
-        const diseaseCategory = row.Disease_category;
-        const geneCategory = row["Gene category"];
-        return (
-          selectedClasses.includes(diseaseCategory) &&
-          selectedClasses.includes(geneCategory)
-        );
-      });
+  // const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
 
-      const newGraphData = createNodesAndLinks(jsonData2);
-      setGraphData(newGraphData);
+  //   if (jsonData) {
+  //     console.log("Filtering with selectedClasses:", selectedClasses ,jsonData);
+
+  //     const filteredData = jsonData.filter((row) => {
+  //       const diseaseCategory = row.Disease_category;
+  //       const geneCategory = row["Gene category"];
+  //       const drugCategory = row?.Phase !== undefined ? String(row.Phase) : undefined;
+  //       const disease = row.Disease;
+  //       const gene = row.Gene;
+  //       const drug = row.Drug_name;
+  //       // Disease category must be selected
+  //       if ( diseaseCategory && !selectedClasses.includes(diseaseCategory)) {
+  //         return false;
+  //       }
+
+  //       // Gene category must be selected
+  //       if (geneCategory &&   !selectedClasses.includes(geneCategory)) {
+  //         return false;
+  //       }
+
+  //       // Apply drug filter if drug exists
+  //       if (row?.Phase && !selectedClasses.includes(drugCategory)) {
+  //         return false;
+  //       }
+
+  //       if (disease && expandedState[disease] !== undefined) {
+  //         if (!selectedExpandedItems.includes(disease)) {
+  //           return false;
+  //         }
+  //       }
+
+  //       if (gene && expandedState[gene] !== undefined) {
+  //         if (!selectedExpandedItems.includes(gene)) {
+  //           return false;
+  //         }
+  //       }
+
+  //       if (drug && expandedState[drug] !== undefined) {
+  //         if (!selectedExpandedItems.includes(drug)) {
+  //           return false;
+  //         }
+  //       }
+
+  //       return true;
+  //     });
+
+  //     const newGraphData = createNodesAndLinks(filteredData);
+  //     setGraphData(newGraphData);
+
+  //     console.log("data filtered with legend:", newGraphData);
+  //   }
+  // };
+
+  const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
+  if (!jsonData) return;
+
+  console.log("Filtering with selectedClasses:", selectedClasses, jsonData);
+
+  const filteredData = jsonData.filter((row) => {
+    const diseaseCategory = row.Disease_category;
+    const geneCategory = row["Gene category"];
+    const phaseValue = row?.Phase !== undefined ? String(row.Phase) : undefined;
+
+    const disease = row.Disease;
+    const gene = row.Gene;
+    const drug = row.Drug_name;
+
+    // --- Main filtering ---
+    let classMatched =
+      (diseaseCategory && selectedClasses.includes(diseaseCategory)) ||
+      (geneCategory && selectedClasses.includes(geneCategory)) ||
+      (phaseValue && selectedClasses.includes(phaseValue));
+
+    if (!classMatched) return false;
+
+    // --- Expanded items check ---
+    if (disease && expandedState[disease] !== undefined) {
+      if (!selectedExpandedItems.includes(disease)) return false;
     }
-  };
+
+    if (gene && expandedState[gene] !== undefined) {
+      if (!selectedExpandedItems.includes(gene)) return false;
+    }
+
+    if (drug && expandedState[drug] !== undefined) {
+      if (!selectedExpandedItems.includes(drug)) return false;
+    }
+
+    return true;
+  });
+
+  const newGraphData = createNodesAndLinks(filteredData);
+  setGraphData(newGraphData);
+
+  console.log("data filtered with legend:", newGraphData);
+};
 
   const handleSelectionChange = (value) => {
     setSelectedValues(value);
@@ -221,8 +326,10 @@ const exportToExcel = () => {
     const jsonData2 = jsonData.filter((row) => {
       const disease = row.Disease;
       const gene = row.Gene;
+      const drug = row.Drug_name;
       const class_disease = row.Disease_category;
       const class_gene = row["Gene category"];
+      const class_drug = row.Phase;
 
       if (!checkedClasses[class_disease]) {
         return false;
@@ -232,11 +339,19 @@ const exportToExcel = () => {
         return false;
       }
 
+      if (class_drug && !checkedClasses[class_drug]) {
+        return false;
+      }
+
       if (disease && expandedState[disease] !== undefined && !expandedState[disease].visible) {
         return false;
       }
 
       if (gene && expandedState[gene] !== undefined && !expandedState[gene].visible) {
+        return false;
+      }
+
+      if (drug && expandedState[drug] !== undefined && !expandedState[drug].visible) {
         return false;
       }
 
