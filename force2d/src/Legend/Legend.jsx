@@ -264,11 +264,17 @@ const Legend = ({
 
                   {item.shape === "square" && (
                     <>
-                      <div style={{ margin: "5px" }}>
-                        <svg width="20" height="20" style={{ marginRight: "2px", marginTop: "5px" }}>
-                          <rect x="0" y="0" width="20" height="20" fill={item.color} />
-                        </svg>
-                      </div>
+            <div
+  style={{
+    margin: "5px",
+    width: "30px",
+    height: "16px",
+    backgroundColor: item.color,
+    borderRadius: "9999px"   // capsule shape
+  }}
+></div>
+
+
                       <Checkbox
                         checked={checkedClasses[item.class]}
                         indeterminate={indeterminateState[item.class]} // Add indeterminate prop

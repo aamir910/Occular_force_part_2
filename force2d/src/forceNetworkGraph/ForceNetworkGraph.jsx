@@ -123,10 +123,19 @@ const ForceNetworkGraph = ({ nodes, links }) => {
     } else if (node.group === "Gene") {
       // Draw circle for 'Gene'
       ctx.arc(node.x, node.y, shapeSize, 0, 2 * Math.PI, false);
-    } else if (node.group === "Drug") {
-      // Draw square for 'Drug'
-      ctx.rect(node.x - shapeSize, node.y - shapeSize, shapeSize * 2, shapeSize * 2);
-    }
+    }else if (node.group === "Drug") {
+  // Draw capsule shape (rounded rectangle)
+  ctx.beginPath();
+  ctx.roundRect(
+    node.x - shapeSize,      // x
+    node.y - shapeSize / 2,  // y
+    shapeSize * 2,           // width
+    shapeSize,               // height
+    shapeSize / 2            // border radius (makes capsule)
+  );
+  ctx.fill();
+  ctx.stroke();
+}
 
     ctx.fill();
 
