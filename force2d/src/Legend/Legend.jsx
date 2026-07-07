@@ -1,80 +1,120 @@
-import { React, useState, useEffect } from "react";
-import { Row, Col, Checkbox, Input, Button } from "antd";
+import { React, useState, useEffect, useMemo } from "react";
+import { Row, Col, Checkbox, Input, Button, Tag, Typography, Empty } from "antd";
 import ToggleCategory from "./ToggleCategory";
+
+const { Text } = Typography;
+
+const LEGEND_ITEMS = [
+  {
+    group: "Disease",
+    items: [
+      { shape: "triangle", color: "red", label: "Refractive errors", class: "Refractive errors" },
+      { shape: "triangle", color: "blue", label: "Retinal diseases", class: "Retinal diseases" },
+      { shape: "triangle", color: "green", label: "Others", class: "Others" },
+      { shape: "triangle", color: "orange", label: "Lens diseases", class: "Lens diseases" },
+      { shape: "triangle", color: "purple", label: "Ocular hypertension", class: "Ocular hypertension" },
+      { shape: "triangle", color: "pink", label: "Ocular motility disorders", class: "Ocular motility disorders" },
+      { shape: "triangle", color: "cyan", label: "Uveal diseases", class: "Uveal diseases" },
+      { shape: "triangle", color: "magenta", label: "Corneal diseases", class: "Corneal diseases" },
+      { shape: "triangle", color: "lime", label: "Conjunctival diseases", class: "Conjunctival diseases" },
+      { shape: "triangle", color: "teal", label: "Orbital diseases", class: "Orbital diseases" },
+      { shape: "triangle", color: "salmon", label: "Eye Neoplasms", class: "Eye Neoplasms" },
+      { shape: "triangle", color: "violet", label: "Lacrimal Apparatus diseases", class: "Lacrimal Apparatus diseases" },
+    ],
+  },
+  {
+    group: "Gene",
+    items: [
+      { shape: "circle", color: "brown", label: "Pseudogene", class: "Pseudogene" },
+      { shape: "circle", color: "darkgreen", label: "Genetic Locus", class: "Genetic Locus" },
+      { shape: "circle", color: "orange", label: "lncRNA", class: "lncRNA" },
+      { shape: "circle", color: "purple", label: "miRNA", class: "miRNA" },
+      { shape: "circle", color: "darkblue", label: "mt_tRNA", class: "mt_tRNA" },
+      { shape: "circle", color: "gray", label: "Other", class: "Other" },
+      { shape: "circle", color: "yellow", label: "Protein coding", class: "Protein coding" },
+      { shape: "circle", color: "pink", label: "RNA gene", class: "RNA gene" },
+    ],
+  },
+  {
+    group: "Drug",
+    items: [
+      { shape: "square", color: "#FF6B6B", label: "Phase 0", class: "0" },
+      { shape: "square", color: "#4ECDC4", label: "Phase 1", class: "1" },
+      { shape: "square", color: "#45B7D1", label: "Phase 2", class: "2" },
+      { shape: "square", color: "#96CEB4", label: "Phase 3", class: "3" },
+      { shape: "square", color: "#FFEAA7", label: "Phase 4", class: "4" },
+      { shape: "square", color: "#DDA0DD", label: "Phase 5", class: "5" },
+    ],
+  },
+];
+
+const GROUP_COLORS = {
+  Disease: "#e6f4ff",
+  Gene: "#f6ffed",
+  Drug: "#fff7e6",
+};
 
 const Legend = ({
   checkedClasses,
   onClassChange,
-  selectedValues,
   setCheckedClasses,
   expandedState,
   setExpandedState,
-  onFilterData,
+  selectedDiseases = [],
 }) => {
   const [expandedClasses, setExpandedClasses] = useState({});
   const [searchQueries, setSearchQueries] = useState({});
-  const [indeterminateState, setIndeterminateState] = useState({}); // New state for indeterminate
+  const [indeterminateState, setIndeterminateState] = useState({});
 
-  const legendItems = [
-    {
-      group: "Disease",
-      items: [
-        { shape: "triangle", color: "red", label: "Refractive errors", class: "Refractive errors" },
-        { shape: "triangle", color: "blue", label: "Retinal diseases", class: "Retinal diseases" },
-        { shape: "triangle", color: "green", label: "Others", class: "Others" },
-        { shape: "triangle", color: "orange", label: "Lens diseases", class: "Lens diseases" },
-        { shape: "triangle", color: "purple", label: "Ocular hypertension", class: "Ocular hypertension" },
-        { shape: "triangle", color: "pink", label: "Ocular motility disorders", class: "Ocular motility disorders" },
-        { shape: "triangle", color: "cyan", label: "Uveal diseases", class: "Uveal diseases" },
-        { shape: "triangle", color: "magenta", label: "Corneal diseases", class: "Corneal diseases" },
-        { shape: "triangle", color: "lime", label: "Conjunctival diseases", class: "Conjunctival diseases" },
-        { shape: "triangle", color: "teal", label: "Orbital diseases", class: "Orbital diseases" },
-        { shape: "triangle", color: "salmon", label: "Eye Neoplasms", class: "Eye Neoplasms" },
-        { shape: "triangle", color: "violet", label: "Lacrimal Apparatus diseases", class: "Lacrimal Apparatus diseases" },
-      ],
-    },
-    {
-      group: "Gene",
-      items: [
-        { shape: "circle", color: "brown", label: "Pseudogene", class: "Pseudogene" },
-        { shape: "circle", color: "darkgreen", label: "Genetic Locus", class: "Genetic Locus" },
-        { shape: "circle", color: "orange", label: "lncRNA", class: "lncRNA" },
-        { shape: "circle", color: "purple", label: "miRNA", class: "miRNA" },
-        { shape: "circle", color: "darkblue", label: "mt_tRNA", class: "mt_tRNA" },
-        { shape: "circle", color: "gray", label: "Other", class: "Other" },
-        { shape: "circle", color: "yellow", label: "Protein coding", class: "Protein coding" },
-        { shape: "circle", color: "pink", label: "RNA gene", class: "RNA gene" },
-      ],
-    },
-    {
-      group: "Drug",
-      items: [
-        { shape: "square", color: "#FF6B6B", label: "Phase 0", class: "0" },
-        { shape: "square", color: "#4ECDC4", label: "Phase 1", class: "1" },
-        { shape: "square", color: "#45B7D1", label: "Phase 2", class: "2" },
-        { shape: "square", color: "#96CEB4", label: "Phase 3", class: "3" },
-        { shape: "square", color: "#FFEAA7", label: "Phase 4", class: "4" },
-        { shape: "square", color: "#DDA0DD", label: "Phase 5", class: "5" },
-      ],
-    },
-  ];
+  const filteredLegendItems = useMemo(() => {
+    if (selectedDiseases.length === 0) {
+      return [];
+    }
 
-  const filteredLegendItems = legendItems.map((group) => ({
-    ...group,
-    items: selectedValues.length === 0 ? group.items : group.items,
-  }));
+    return LEGEND_ITEMS.map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        Object.values(expandedState).some(
+          (details) => String(details.label) === String(item.class)
+        )
+      ),
+    })).filter((group) => group.items.length > 0);
+  }, [expandedState, selectedDiseases]);
 
-  // Synchronize main category checkboxes with expanded items
+  const getExpandedEntriesForItem = (item) => {
+    const query = searchQueries[item.class] || "";
+
+    return Object.entries(expandedState)
+      .filter(([id, details]) => {
+        if (String(details.label) !== String(item.class)) {
+          return false;
+        }
+        if (details.type === "Disease" && !selectedDiseases.includes(id)) {
+          return false;
+        }
+        return id.toLowerCase().includes(query);
+      })
+      .sort(([idA], [idB]) => idA.localeCompare(idB));
+  };
+
   useEffect(() => {
-    if (!expandedState || !checkedClasses) return;
+    if (!expandedState || !checkedClasses || filteredLegendItems.length === 0) return;
 
     const updatedCheckedClasses = { ...checkedClasses };
     const updatedIndeterminateState = {};
 
-    legendItems.forEach(group => {
-      group.items.forEach(item => {
+    filteredLegendItems.forEach((group) => {
+      group.items.forEach((item) => {
         const relatedExpandedItems = Object.entries(expandedState).filter(
-          ([_, details]) => String(details.label) === String(item.class)
+          ([id, details]) => {
+            if (String(details.label) !== String(item.class)) {
+              return false;
+            }
+            if (details.type === "Disease") {
+              return selectedDiseases.includes(id);
+            }
+            return true;
+          }
         );
 
         if (relatedExpandedItems.length > 0) {
@@ -89,8 +129,8 @@ const Legend = ({
             updatedCheckedClasses[item.class] = true;
             updatedIndeterminateState[item.class] = false;
           } else if (anyExpandedChecked) {
-            updatedCheckedClasses[item.class] = true; // Partially checked
-            updatedIndeterminateState[item.class] = true; // Indeterminate
+            updatedCheckedClasses[item.class] = true;
+            updatedIndeterminateState[item.class] = true;
           } else {
             updatedCheckedClasses[item.class] = false;
             updatedIndeterminateState[item.class] = false;
@@ -103,14 +143,14 @@ const Legend = ({
       setCheckedClasses(updatedCheckedClasses);
     }
     setIndeterminateState(updatedIndeterminateState);
-  }, [expandedState, checkedClasses, legendItems, setCheckedClasses]);
+  }, [expandedState, checkedClasses, filteredLegendItems, selectedDiseases, setCheckedClasses]);
 
   const handleMainCategoryChange = (className, checked) => {
     onClassChange(className, checked);
 
     let targetItem = null;
-    legendItems.forEach(group => {
-      group.items.forEach(item => {
+    filteredLegendItems.forEach((group) => {
+      group.items.forEach((item) => {
         if (item.class === className) {
           targetItem = item;
         }
@@ -118,16 +158,20 @@ const Legend = ({
     });
 
     if (targetItem) {
-      setExpandedState(prev => {
+      setExpandedState((prev) => {
         const updated = { ...prev };
         Object.entries(updated).forEach(([id, details]) => {
-          if (String(details.label) === String(targetItem.class)) {
-            updated[id] = { ...details, visible: checked };
+          if (String(details.label) !== String(targetItem.class)) {
+            return;
           }
+          if (details.type === "Disease" && !selectedDiseases.includes(id)) {
+            return;
+          }
+          updated[id] = { ...details, visible: checked };
         });
         return updated;
       });
-      setIndeterminateState(prev => ({ ...prev, [className]: false })); // Reset indeterminate
+      setIndeterminateState((prev) => ({ ...prev, [className]: false }));
     }
   };
 
@@ -138,286 +182,219 @@ const Legend = ({
     }));
   };
 
-  const handleFilterData = () => {
-    const selectedClasses = Object.entries(checkedClasses)
-      .filter(([_, checked]) => checked)
-      .map(([className]) => className);
-
-    const selectedExpandedItems = Object.entries(expandedState)
-      .filter(([_, details]) => details.visible)
-      .map(([id]) => id);
-
-    onFilterData({
-      selectedClasses,
-      selectedExpandedItems,
-    });
+  const renderShape = (item) => {
+    if (item.shape === "triangle") {
+      return (
+        <svg width="18" height="18">
+          <polygon points="9,0 0,18 18,18" fill={item.color} />
+        </svg>
+      );
+    }
+    if (item.shape === "circle") {
+      return (
+        <svg width="18" height="18">
+          <circle cx="9" cy="9" r="9" fill={item.color} />
+        </svg>
+      );
+    }
+    return (
+      <div
+        style={{
+          width: "28px",
+          height: "14px",
+          backgroundColor: item.color,
+          borderRadius: "9999px",
+        }}
+      />
+    );
   };
 
   return (
     <Row
       style={{
-        maxHeight: "100vh",
+        maxHeight: "calc(100vh - 120px)",
         overflowY: "auto",
         scrollbarWidth: "thin",
         scrollbarColor: "#888 #f1f1f1",
       }}
     >
-      <Col span={24} style={{ marginBottom: "10px" }}>
-        <Button
-          type="primary"
-          onClick={handleFilterData}
-          style={{ width: "50%", maxWidth: "250px" }}
-        >
-          Filter Data
-        </Button>
-      </Col>
-
-      {filteredLegendItems.map((group, groupIndex) => (
-        <Col
-          key={groupIndex}
-          span={24}
-          style={{ marginTop: group.group === "" ? "25px" : "0" }}
-        >
-          <dl style={{ margin: 0, padding: 0 }}>
-            <dt
+      {selectedDiseases.length === 0 ? (
+        <Col span={24}>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="Select diseases in the dropdown to see related filters"
+          />
+        </Col>
+      ) : filteredLegendItems.length === 0 ? (
+        <Col span={24}>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="No filter categories found for the selected diseases"
+          />
+        </Col>
+      ) : (
+        filteredLegendItems.map((group, groupIndex) => (
+          <Col key={groupIndex} span={24} style={{ marginBottom: "14px" }}>
+            <div
               style={{
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "start",
-                justifyContent: "flex-start",
-                fontSize: "15px",
-                marginBottom: group.group === "Others" ? "10px" : "0",
+                background: GROUP_COLORS[group.group] || "#fafafa",
+                borderRadius: "8px",
+                border: "1px solid #f0f0f0",
+                padding: "12px",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {group.group || null}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "10px",
+                  paddingBottom: "8px",
+                  borderBottom: "1px solid rgba(0,0,0,0.06)",
+                }}
+              >
+                <Text strong style={{ fontSize: "14px" }}>
+                  {group.group}
+                </Text>
                 <ToggleCategory
                   type={group.group}
-                  legendItems={legendItems}
+                  legendItems={filteredLegendItems}
                   checkedClasses={checkedClasses}
                   setCheckedClasses={setCheckedClasses}
                   expandedState={expandedState}
                   setExpandedState={setExpandedState}
                 />
               </div>
-            </dt>
 
-            {group.items.map((item, index) => (
-              <dd
-                key={index}
-                style={{
-                  marginBottom: "8px",
-                  display: "flex",
-                  alignItems: "start",
-                  justifyContent: "flex-start",
-                  flexDirection: "column",
-                  marginLeft: 0,
-                }}
-              >
-                <div
-                  style={{
-                    marginBottom: "8px",
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginLeft: 0,
-                  }}
-                >
+              {group.items.map((item, index) => {
+                const expandedEntries = getExpandedEntriesForItem(item);
+
+                return (
                   <div
-                    style={{ cursor: "pointer", marginRight: "8px" }}
-                    onClick={() => toggleExpand(item.class)}
+                    key={index}
+                    style={{
+                      marginBottom: index === group.items.length - 1 ? 0 : "10px",
+                      background: "#fff",
+                      borderRadius: "6px",
+                      padding: "8px",
+                      border: "1px solid #f0f0f0",
+                    }}
                   >
-                    {expandedClasses[item.class] ? "▼" : "▶"}
-                  </div>
-
-                  {item.shape === "triangle" && (
-                    <>
-                      <div style={{ margin: "5px" }}>
-                        <svg width="20" height="20" style={{ marginRight: "2px" }}>
-                          <polygon points="10,0 0,20 20,20" fill={item.color} />
-                        </svg>
-                      </div>
-                      <Checkbox
-                        checked={checkedClasses[item.class]}
-                        indeterminate={indeterminateState[item.class]} // Add indeterminate prop
-                        onChange={(e) => handleMainCategoryChange(item.class, e.target.checked)}
-                        style={{ marginLeft: "2px" }}
-                      />
-                    </>
-                  )}
-
-                  {item.shape === "circle" && (
-                    <>
-                      <div style={{ margin: "5px" }}>
-                        <svg width="20" height="20" style={{ marginRight: "2px", marginTop: "5px" }}>
-                          <circle cx="10" cy="10" r="10" fill={item.color} />
-                        </svg>
-                      </div>
-                      <Checkbox
-                        checked={checkedClasses[item.class]}
-                        indeterminate={indeterminateState[item.class]} // Add indeterminate prop
-                        onChange={(e) => handleMainCategoryChange(item.class, e.target.checked)}
-                        style={{ marginLeft: "2px" }}
-                      />
-                    </>
-                  )}
-
-                  {item.shape === "square" && (
-                    <>
-            <div
-  style={{
-    margin: "5px",
-    width: "30px",
-    height: "16px",
-    backgroundColor: item.color,
-    borderRadius: "9999px"   // capsule shape
-  }}
-></div>
-
-
-                      <Checkbox
-                        checked={checkedClasses[item.class]}
-                        indeterminate={indeterminateState[item.class]} // Add indeterminate prop
-                        onChange={(e) => handleMainCategoryChange(item.class, e.target.checked)}
-                        style={{ marginLeft: "2px" }}
-                      />
-                    </>
-                  )}
-
-                  <div style={{ marginLeft: "3px" }}>{item.label}</div>
-                </div>
-
-                {expandedClasses[item.class] && (
-                  <div style={{ marginTop: "10px", width: "100%" }}>
-                    <Input
-                      placeholder="Search..."
-                      style={{ marginBottom: "10px", maxWidth: "250px" }}
-                      value={searchQueries[item.class] || ""}
-                      onChange={(e) => {
-                        setSearchQueries((prev) => ({
-                          ...prev,
-                          [item.class]: e.target.value.toLowerCase(),
-                        }));
-                      }}
-                    />
-
-                    <div
-                      style={{
-                        marginBottom: "10px",
-                        display: "flex",
-                        gap: "10px",
-                      }}
-                    >
-                      <button
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: "5px",
-                          backgroundColor: "#1890ff",
-                          color: "#fff",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => {
-                          const currentQuery = searchQueries[item.class] || "";
-                          const filteredItems = Object.entries(expandedState)
-                            .filter(([id, details]) =>
-                              String(details.label) === String(item.class) &&
-                              id.toLowerCase().includes(currentQuery)
-                            );
-
-                          setExpandedState((prev) => {
-                            const newState = { ...prev };
-                            filteredItems.forEach(([id]) => {
-                              newState[id] = { ...newState[id], visible: true };
-                            });
-                            return newState;
-                          });
-                        }}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div
+                        style={{ cursor: "pointer", fontSize: "11px", color: "#8c8c8c", width: "14px" }}
+                        onClick={() => toggleExpand(item.class)}
                       >
-                        Select All
-                      </button>
-                      <button
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: "5px",
-                          backgroundColor: "#ff4d4f",
-                          color: "#fff",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => {
-                          const currentQuery = searchQueries[item.class] || "";
-                          const filteredItems = Object.entries(expandedState)
-                            .filter(([id, details]) =>
-                              String(details.label) === String(item.class) &&
-                              id.toLowerCase().includes(currentQuery)
-                            );
+                        {expandedClasses[item.class] ? "▼" : "▶"}
+                      </div>
 
-                          setExpandedState((prev) => {
-                            const newState = { ...prev };
-                            filteredItems.forEach(([id]) => {
-                              newState[id] = { ...newState[id], visible: false };
-                            });
-                            return newState;
-                          });
-                        }}
-                      >
-                        Unselect All
-                      </button>
+                      {renderShape(item)}
+
+                      <Checkbox
+                        checked={checkedClasses[item.class]}
+                        indeterminate={indeterminateState[item.class]}
+                        onChange={(e) => handleMainCategoryChange(item.class, e.target.checked)}
+                      />
+
+                      <Text style={{ fontSize: "13px", flex: 1 }}>{item.label}</Text>
+
+                      <Tag style={{ margin: 0, fontSize: "11px" }}>{expandedEntries.length}</Tag>
                     </div>
 
-                    <ul
-                      style={{
-                        marginTop: "2px",
-                        maxHeight: "300px",
-                        overflowY: "auto",
-                        border: "1px solid #d9d9d9",
-                        borderRadius: "5px",
-                        maxWidth: "250px",
-                        scrollbarWidth: "thin",
-                      }}
-                    >
-                      {Object.entries(expandedState)
-                        .filter(([id, details]) => {
-                          const currentQuery = searchQueries[item.class] || "";
-                          return (
-                            String(details.label) === String(item.class) &&
-                            id.toLowerCase().includes(currentQuery)
-                          );
-                        })
-                        .sort(([idA], [idB]) => idA.localeCompare(idB))
-                        .map(([id, details]) => (
-                          <li
-                            key={id}
-                            style={{
-                              listStyle: "none",
-                              borderBottom: "1px solid #e8e8e8",
+                    {expandedClasses[item.class] && expandedEntries.length > 0 && (
+                      <div style={{ marginTop: "10px", marginLeft: "30px" }}>
+                        <Input
+                          placeholder="Search..."
+                          size="small"
+                          value={searchQueries[item.class] || ""}
+                          onChange={(e) =>
+                            setSearchQueries((prev) => ({
+                              ...prev,
+                              [item.class]: e.target.value.toLowerCase(),
+                            }))
+                          }
+                          style={{ marginBottom: "8px" }}
+                          allowClear
+                        />
+
+                        <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                          <Button
+                            size="small"
+                            type="primary"
+                            onClick={() => {
+                              const filtered = getExpandedEntriesForItem(item);
+                              setExpandedState((prev) => {
+                                const updated = { ...prev };
+                                filtered.forEach(([id]) => {
+                                  updated[id].visible = true;
+                                });
+                                return updated;
+                              });
                             }}
                           >
-                            <Checkbox
-                              checked={details.visible}
-                              onChange={(e) => {
-                                setExpandedState((prev) => ({
-                                  ...prev,
-                                  [id]: {
-                                    ...prev[id],
-                                    visible: e.target.checked,
-                                  },
-                                }));
+                            Select All
+                          </Button>
+                          <Button
+                            size="small"
+                            danger
+                            onClick={() => {
+                              const filtered = getExpandedEntriesForItem(item);
+                              setExpandedState((prev) => {
+                                const updated = { ...prev };
+                                filtered.forEach(([id]) => {
+                                  updated[id].visible = false;
+                                });
+                                return updated;
+                              });
+                            }}
+                          >
+                            Unselect All
+                          </Button>
+                        </div>
+
+                        <ul
+                          style={{
+                            maxHeight: "220px",
+                            overflowY: "auto",
+                            border: "1px solid #e8e8e8",
+                            borderRadius: "6px",
+                            padding: "6px 10px",
+                            listStyle: "none",
+                            margin: 0,
+                            background: "#fafafa",
+                          }}
+                        >
+                          {expandedEntries.map(([id, details]) => (
+                            <li
+                              key={id}
+                              style={{
+                                padding: "5px 0",
+                                borderBottom: "1px solid #f0f0f0",
                               }}
                             >
-                              {id}
-                            </Checkbox>
-                          </li>
-                        ))}
-                    </ul>
+                              <Checkbox
+                                checked={details.visible}
+                                onChange={(e) =>
+                                  setExpandedState((prev) => ({
+                                    ...prev,
+                                    [id]: { ...prev[id], visible: e.target.checked },
+                                  }))
+                                }
+                              >
+                                <Text style={{ fontSize: "12px" }}>{id}</Text>
+                              </Checkbox>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                )}
-              </dd>
-            ))}
-          </dl>
-        </Col>
-      ))}
+                );
+              })}
+            </div>
+          </Col>
+        ))
+      )}
     </Row>
   );
 };

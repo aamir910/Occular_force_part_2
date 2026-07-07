@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
 import { Card, Select, Row, Col, Button, Modal } from "antd";
 import html2canvas from "html2canvas";
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 import ForceNetworkGraph from "./forceNetworkGraph/ForceNetworkGraph";
 import Legend from "./Legend/Legend";
+
+const DEFAULT_SELECTED_DISEASES = ["Cone-rod dystrophy", "Cone dystrophy"];
 
 function App() {
   const [jsonData, setJsonData] = useState(null);
@@ -41,10 +43,10 @@ function App() {
 
   const [expandedState, setExpandedState] = useState({});
   const [uniqueClasses, setUniqueClasses] = useState([]);
-  const [selectedValues, setSelectedValues] = useState([]);
-  const [uniqueModes, setUniqueModes] = useState([]);
+  const [selectedDiseases, setSelectedDiseases] = useState(DEFAULT_SELECTED_DISEASES);
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const rowRef = useRef(null);
+  const hasInitialFilterApplied = useRef(false);
   const { Option } = Select;
 
   useEffect(() => {
@@ -76,11 +78,53 @@ function App() {
         classes.add(classOfNode);
       }
     });
-    setUniqueClasses(Array.from(classes));
+    setUniqueClasses(Array.from(classes).sort((a, b) => a.localeCompare(b)));
+    setSelectedDiseases((prev) => {
+      const validDefaults = DEFAULT_SELECTED_DISEASES.filter((disease) => classes.has(disease));
+      if (validDefaults.length > 0) {
+        return validDefaults;
+      }
+      return prev;
+    });
+  };
+
+  const buildExpandedStateFromData = (data) => {
+    const initialState = {};
+
+    data.forEach((row) => {
+      const disease = row.Disease;
+      const gene = row.Gene;
+      const drug = row.Drug_name;
+
+      if (disease && !initialState[disease]) {
+        initialState[disease] = {
+          visible: true,
+          label: row.Disease_category,
+          type: "Disease",
+        };
+      }
+
+      if (gene && !initialState[gene]) {
+        initialState[gene] = {
+          visible: true,
+          label: row["Gene category"],
+          type: "Gene",
+        };
+      }
+
+      if (drug && !initialState[drug]) {
+        initialState[drug] = {
+          visible: true,
+          label: String(row.Phase),
+          type: "Drug",
+        };
+      }
+    });
+
+    return initialState;
   };
 
   const createNodesAndLinks = (data) => {
-    let filteredRows = [];
     const nodesMap = new Map();
     const links = [];
 
@@ -161,22 +205,16 @@ function App() {
 
   useEffect(() => {
     if (jsonData) {
-      const newGraphData = createNodesAndLinks(jsonData);
-      const initialState = newGraphData.nodes
-        .filter((item) => item.type === "Disease" || item.type === "Gene" || item.type === "Drug")
-        .reduce((acc, item) => {
-          acc[item.id] = {
-            visible: true,
-            label: item.class,
-            type: item.type,
-          };
-          return acc;
-        }, {});
-      setExpandedState(initialState);
-      setGraphData(newGraphData);
-      console.log("Graph data initialized:", newGraphData); 
+      const scopedRows =
+        selectedDiseases.length > 0
+          ? jsonData.filter((row) => selectedDiseases.includes(row.Disease))
+          : [];
+      setExpandedState(buildExpandedStateFromData(scopedRows));
+      if (hasInitialFilterApplied.current) {
+        setGraphData({ nodes: [], links: [] });
+      }
     }
-  }, [jsonData]);
+  }, [jsonData, selectedDiseases]);
 
   const handleClassCheckboxChange = (className, checked) => {
     setCheckedClasses((prevCheckedClasses) => ({
@@ -185,132 +223,89 @@ function App() {
     }));
   };
 
-  // const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
+  const handleFilterData = useCallback(
+    ({ selectedClasses, selectedExpandedItems }) => {
+      if (!jsonData) return;
 
-  //   if (jsonData) {
-  //     console.log("Filtering with selectedClasses:", selectedClasses ,jsonData);
-
-  //     const filteredData = jsonData.filter((row) => {
-  //       const diseaseCategory = row.Disease_category;
-  //       const geneCategory = row["Gene category"];
-  //       const drugCategory = row?.Phase !== undefined ? String(row.Phase) : undefined;
-  //       const disease = row.Disease;
-  //       const gene = row.Gene;
-  //       const drug = row.Drug_name;
-  //       // Disease category must be selected
-  //       if ( diseaseCategory && !selectedClasses.includes(diseaseCategory)) {
-  //         return false;
-  //       }
-
-  //       // Gene category must be selected
-  //       if (geneCategory &&   !selectedClasses.includes(geneCategory)) {
-  //         return false;
-  //       }
-
-  //       // Apply drug filter if drug exists
-  //       if (row?.Phase && !selectedClasses.includes(drugCategory)) {
-  //         return false;
-  //       }
-
-  //       if (disease && expandedState[disease] !== undefined) {
-  //         if (!selectedExpandedItems.includes(disease)) {
-  //           return false;
-  //         }
-  //       }
-
-  //       if (gene && expandedState[gene] !== undefined) {
-  //         if (!selectedExpandedItems.includes(gene)) {
-  //           return false;
-  //         }
-  //       }
-
-  //       if (drug && expandedState[drug] !== undefined) {
-  //         if (!selectedExpandedItems.includes(drug)) {
-  //           return false;
-  //         }
-  //       }
-
-  //       return true;
-  //     });
-
-  //     const newGraphData = createNodesAndLinks(filteredData);
-  //     setGraphData(newGraphData);
-
-  //     console.log("data filtered with legend:", newGraphData);
-  //   }
-  // };
-
-  const handleFilterData = ({ selectedClasses, selectedExpandedItems }) => {
-  if (!jsonData) return;
-
-  console.log("Filtering with selectedClasses:", selectedClasses, jsonData);
-
-  const filteredData = jsonData.filter((row) => {
-    const diseaseCategory = row.Disease_category;
-    const geneCategory = row["Gene category"];
-    const phaseValue = row?.Phase !== undefined ? String(row.Phase) : undefined;
-
-    const disease = row.Disease;
-    const gene = row.Gene;
-    const drug = row.Drug_name;
-
-    // --- Main filtering ---
-    let classMatched =
-      (diseaseCategory && selectedClasses.includes(diseaseCategory)) ||
-      (geneCategory && selectedClasses.includes(geneCategory)) ||
-      (phaseValue && selectedClasses.includes(phaseValue));
-
-    if (!classMatched) return false;
-
-    // --- Expanded items check ---
-    if (disease && expandedState[disease] !== undefined) {
-      if (!selectedExpandedItems.includes(disease)) return false;
-    }
-
-    if (gene && expandedState[gene] !== undefined) {
-      if (!selectedExpandedItems.includes(gene)) return false;
-    }
-
-    if (drug && expandedState[drug] !== undefined) {
-      if (!selectedExpandedItems.includes(drug)) return false;
-    }
-
-    return true;
-  });
-
-  const newGraphData = createNodesAndLinks(filteredData);
-  setGraphData(newGraphData);
-
-  console.log("data filtered with legend:", newGraphData);
-};
-
-  const handleSelectionChange = (value) => {
-    setSelectedValues(value);
-  };
-
-  const applyFilter = () => {
-    if (jsonData) {
-      if (selectedValues.length !== 0) {
-        const filtered = originalData.filter((row) =>
-          selectedValues.includes(row["Disease"])
-        );
-        setJsonData(filtered);
-        if (filtered.length > 0) {
-          const uniqueModesArray = [
-            ...new Set(
-              filtered.flatMap((row) => [
-                row["Disease_category"],
-                row["Gene category"],
-              ])
-            ),
-          ];
-          setUniqueModes(uniqueModesArray);
-        }
-      } else {
-        setJsonData(originalData);
-        setUniqueModes([]);
+      if (selectedDiseases.length === 0) {
+        setGraphData({ nodes: [], links: [] });
+        return;
       }
+
+      const filteredData = jsonData.filter((row) => {
+        const diseaseCategory = row.Disease_category;
+        const geneCategory = row["Gene category"];
+        const phaseValue = row?.Phase !== undefined ? String(row.Phase) : undefined;
+        const disease = row.Disease;
+        const gene = row.Gene;
+        const drug = row.Drug_name;
+
+        if (!selectedDiseases.includes(disease)) {
+          return false;
+        }
+
+        const classMatched =
+          (diseaseCategory && selectedClasses.includes(diseaseCategory)) ||
+          (geneCategory && selectedClasses.includes(geneCategory)) ||
+          (phaseValue && selectedClasses.includes(phaseValue));
+
+        if (!classMatched) return false;
+
+        if (disease && expandedState[disease] !== undefined) {
+          if (!selectedExpandedItems.includes(disease)) return false;
+        }
+
+        if (gene && expandedState[gene] !== undefined) {
+          if (!selectedExpandedItems.includes(gene)) return false;
+        }
+
+        if (drug && expandedState[drug] !== undefined) {
+          if (!selectedExpandedItems.includes(drug)) return false;
+        }
+
+        return true;
+      });
+
+      const newGraphData = createNodesAndLinks(filteredData);
+      setGraphData(newGraphData);
+    },
+    [jsonData, selectedDiseases, expandedState, checkedClasses]
+  );
+
+  const applyFilters = useCallback(() => {
+    const selectedClasses = Object.entries(checkedClasses)
+      .filter(([, checked]) => checked)
+      .map(([className]) => className);
+
+    const selectedExpandedItems = Object.entries(expandedState)
+      .filter(([id, details]) => {
+        if (!details.visible) {
+          return false;
+        }
+        if (details.type === "Disease") {
+          return selectedDiseases.includes(id);
+        }
+        return true;
+      })
+      .map(([id]) => id);
+
+    handleFilterData({ selectedClasses, selectedExpandedItems });
+  }, [checkedClasses, expandedState, selectedDiseases, handleFilterData]);
+
+  useEffect(() => {
+    if (
+      jsonData &&
+      selectedDiseases.length > 0 &&
+      Object.keys(expandedState).length > 0 &&
+      !hasInitialFilterApplied.current
+    ) {
+      hasInitialFilterApplied.current = true;
+      applyFilters();
     }
+  }, [jsonData, selectedDiseases, expandedState, applyFilters]);
+
+  const handleDiseaseSelectionChange = (value) => {
+    setSelectedDiseases(value);
   };
 
   const handleOpenBox = () => {
@@ -321,81 +316,82 @@ function App() {
     setIsBoxOpen(false);
   };
 
-const exportToExcel = () => {
-  if (jsonData) {
-    const jsonData2 = jsonData.filter((row) => {
-      const disease = row.Disease;
-      const gene = row.Gene;
-      const drug = row.Drug_name;
-      const class_disease = row.Disease_category;
-      const class_gene = row["Gene category"];
-      const class_drug = row.Phase;
+  const exportToExcel = () => {
+    if (jsonData) {
+      const jsonData2 = jsonData.filter((row) => {
+        const disease = row.Disease;
+        const gene = row.Gene;
+        const drug = row.Drug_name;
+        const class_disease = row.Disease_category;
+        const class_gene = row["Gene category"];
+        const class_drug = row.Phase;
 
-      if (!checkedClasses[class_disease]) {
-        return false;
+        if (!checkedClasses[class_disease]) {
+          return false;
+        }
+
+        if (!checkedClasses[class_gene]) {
+          return false;
+        }
+
+        if (class_drug && !checkedClasses[class_drug]) {
+          return false;
+        }
+
+        if (disease && expandedState[disease] !== undefined && !expandedState[disease].visible) {
+          return false;
+        }
+
+        if (gene && expandedState[gene] !== undefined && !expandedState[gene].visible) {
+          return false;
+        }
+
+        if (drug && expandedState[drug] !== undefined && !expandedState[drug].visible) {
+          return false;
+        }
+
+        return true;
+      });
+
+      if (jsonData2.length > 0) {
+        const worksheet = XLSX.utils.json_to_sheet(jsonData2);
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, worksheet, "Filtered_Gene_Disease");
+        XLSX.writeFile(book, "Filtered_Gene_Disease_data.xlsx");
+      } else {
+        console.log("No filtered data to export.");
       }
-
-      if (!checkedClasses[class_gene]) {
-        return false;
-      }
-
-      if (class_drug && !checkedClasses[class_drug]) {
-        return false;
-      }
-
-      if (disease && expandedState[disease] !== undefined && !expandedState[disease].visible) {
-        return false;
-      }
-
-      if (gene && expandedState[gene] !== undefined && !expandedState[gene].visible) {
-        return false;
-      }
-
-      if (drug && expandedState[drug] !== undefined && !expandedState[drug].visible) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (jsonData2.length > 0) {
-      const worksheet = XLSX.utils.json_to_sheet(jsonData2);
-      const book = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(book, worksheet, "Filtered_Gene_Disease");
-      XLSX.writeFile(book, "Filtered_Gene_Disease_data.xlsx");
     } else {
-      console.log("No filtered data to export.");
+      console.log("No data available to export.");
     }
-  } else {
-    console.log("No data available to export.");
-  }
-};
+  };
 
   const exportGraphImage = async (format) => {
     if (rowRef.current) {
       const canvas = await html2canvas(rowRef.current);
       let filename, dataURL;
-      
-      switch(format) {
-        case 'png':
-          filename = 'graph_screenshot.png';
-          dataURL = canvas.toDataURL('image/png');
+
+      switch (format) {
+        case "png":
+          filename = "graph_screenshot.png";
+          dataURL = canvas.toDataURL("image/png");
           break;
-        case 'jpg':
-          filename = 'graph_screenshot.jpg';
-          dataURL = canvas.toDataURL('image/jpeg');
+        case "jpg":
+          filename = "graph_screenshot.jpg";
+          dataURL = canvas.toDataURL("image/jpeg");
           break;
-        case 'svg':
-          filename = 'graph_screenshot.svg';
-          const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}"><image width="${canvas.width}" height="${canvas.height}" href="${canvas.toDataURL('image/png')}"/></svg>`;
-          const blob = new Blob([svgData], { type: 'image/svg+xml' });
+        case "svg": {
+          filename = "graph_screenshot.svg";
+          const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}"><image width="${canvas.width}" height="${canvas.height}" href="${canvas.toDataURL("image/png")}"/></svg>`;
+          const blob = new Blob([svgData], { type: "image/svg+xml" });
           saveAs(blob, filename);
           return;
+        }
         default:
           return;
       }
-      
-      const link = document.createElement('a');
+
+      const link = document.createElement("a");
       link.download = filename;
       link.href = dataURL;
       link.click();
@@ -409,7 +405,7 @@ const exportToExcel = () => {
       <Row gutter={16} ref={rowRef}>
         <Col span={5} style={{ minWidth: "16%" }}>
           <Card
-            title=""
+            title="Legend Filters"
             bordered
             style={{
               backgroundColor: "#ffffff",
@@ -420,11 +416,10 @@ const exportToExcel = () => {
             <Legend
               checkedClasses={checkedClasses}
               onClassChange={handleClassCheckboxChange}
-              selectedValues={uniqueModes}
               setCheckedClasses={setCheckedClasses}
               expandedState={expandedState}
               setExpandedState={setExpandedState}
-              onFilterData={handleFilterData}
+              selectedDiseases={selectedDiseases}
             />
           </Card>
         </Col>
@@ -452,11 +447,43 @@ const exportToExcel = () => {
               borderRadius: "8px",
             }}
           >
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                htmlFor="disease-filter"
+                style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}
+              >
+                Filter by Disease Name
+              </label>
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <Select
+                  id="disease-filter"
+                  mode="multiple"
+                  showSearch
+                  allowClear
+                  placeholder="Select one or more diseases"
+                  value={selectedDiseases}
+                  onChange={handleDiseaseSelectionChange}
+                  optionFilterProp="children"
+                  style={{ flex: 1 }}
+                >
+                  {uniqueClasses.map((disease) => (
+                    <Option key={disease} value={disease}>
+                      {disease}
+                    </Option>
+                  ))}
+                </Select>
+                <Button
+                  type="primary"
+                  onClick={applyFilters}
+                  disabled={selectedDiseases.length === 0}
+                >
+                  Filter Data
+                </Button>
+              </div>
+            </div>
+
             {graphData.nodes.length > 0 && graphData.links.length > 0 ? (
-              <ForceNetworkGraph
-                nodes={graphData.nodes}
-                links={graphData.links}
-              />
+              <ForceNetworkGraph nodes={graphData.nodes} links={graphData.links} />
             ) : (
               <p
                 style={{
@@ -465,56 +492,46 @@ const exportToExcel = () => {
                   overflow: "hidden",
                 }}
               >
-                No data in current filtration...
+                Select diseases and click Filter Data to view the graph.
               </p>
             )}
           </Card>
         </Col>
       </Row>
 
-      <Modal
-        title="Export Options"
-        open={isBoxOpen}
-        onCancel={handleCloseBox}
-        footer={null}
-      >
-        <div 
-          style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '10px',
-            alignItems: 'center'
+      <Modal title="Export Options" open={isBoxOpen} onCancel={handleCloseBox} footer={null}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            alignItems: "center",
           }}
         >
-          <Button 
-            type="primary" 
-            size="small"
-            style={{ width: '150px' }}  // Fixed width for all buttons
-            onClick={exportToExcel}
-          >
+          <Button type="primary" size="small" style={{ width: "150px" }} onClick={exportToExcel}>
             Export to Excel
           </Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="small"
-            style={{ width: '150px' }}  // Fixed width for all buttons
-            onClick={() => exportGraphImage('png')}
+            style={{ width: "150px" }}
+            onClick={() => exportGraphImage("png")}
           >
             Download as PNG
           </Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="small"
-            style={{ width: '150px' }}  // Fixed width for all buttons
-            onClick={() => exportGraphImage('jpg')}
+            style={{ width: "150px" }}
+            onClick={() => exportGraphImage("jpg")}
           >
             Download as JPG
           </Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="small"
-            style={{ width: '150px' }}  // Fixed width for all buttons
-            onClick={() => exportGraphImage('svg')}
+            style={{ width: "150px" }}
+            onClick={() => exportGraphImage("svg")}
           >
             Download as SVG
           </Button>
