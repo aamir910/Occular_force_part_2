@@ -36,35 +36,64 @@ function App() {
   const [originalData, setOriginalData] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [checkedClasses, setCheckedClasses] = useState({
-    "Refractive Errors": true,
-    "Retinal Diseases": true,
-    Others: true,
-    "Lens Diseases": true,
-    "Ocular Hypertension": true,
-    "Ocular Motility Disorders": true,
-    "Uveal Diseases": true,
-    "Corneal Diseases": true,
-    "Conjunctival Diseases": true,
-    "Orbital Diseases": true,
-    "Eye Neoplasms": true,
-    "Lacrimal Apparatus Diseases": true,
-    Pseudogene: true,
-    "Genetic Locus": true,
-    lncRNA: true,
-    miRNA: true,
-    mt_tRNA: true,
-    Other: true,
-    "Protein coding": true,
-    "RNA gene": true,
-    "0": true,
-    "1": true,
-    "2": true,
-    "3": true,
-    "4": true,
-    "5": true,
+    "Refractive Errors": false,
+    "Retinal Diseases": false,
+    Others: false,
+    "Lens Diseases": false,
+    "Ocular Hypertension": false,
+    "Ocular Motility Disorders": false,
+    "Uveal Diseases": false,
+    "Corneal Diseases": false,
+    "Conjunctival Diseases": false,
+    "Orbital Diseases": false,
+    "Eye Neoplasms": false,
+    "Lacrimal Apparatus Diseases": false,
+    Pseudogene: false,
+    "Genetic Locus": false,
+    lncRNA: false,
+    miRNA: false,
+    mt_tRNA: false,
+    Other: false,
+    "Protein coding": false,
+    "RNA gene": false,
+    "0": false,
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false,
   });
 
   const [expandedState, setExpandedState] = useState({});
+  const [availableClasses, setAvailableClasses] = useState({
+    "Refractive Errors": false,
+    "Retinal Diseases": false,
+    Others: false,
+    "Lens Diseases": false,
+    "Ocular Hypertension": false,
+    "Ocular Motility Disorders": false,
+    "Uveal Diseases": false,
+    "Corneal Diseases": false,
+    "Conjunctival Diseases": false,
+    "Orbital Diseases": false,
+    "Eye Neoplasms": false,
+    "Lacrimal Apparatus Diseases": false,
+    Pseudogene: false,
+    "Genetic Locus": false,
+    lncRNA: false,
+    miRNA: false,
+    mt_tRNA: false,
+    Other: false,
+    "Protein coding": false,
+    "RNA gene": false,
+    "0": false,
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false,
+  });
+  const [availableIds, setAvailableIds] = useState({});
   const [uniqueClasses, setUniqueClasses] = useState([]);
   const [selectedDiseases, setSelectedDiseases] = useState(DEFAULT_SELECTED_DISEASES);
   const [isBoxOpen, setIsBoxOpen] = useState(false);
@@ -121,7 +150,7 @@ function App() {
 
       if (disease && !initialState[disease]) {
         initialState[disease] = {
-          visible: true,
+          visible: false,
           label: normalizeDiseaseCategory(row.Disease_category),
           type: "Disease",
         };
@@ -129,7 +158,7 @@ function App() {
 
       if (gene && !initialState[gene]) {
         initialState[gene] = {
-          visible: true,
+          visible: false,
           label: row["Gene category"],
           type: "Gene",
         };
@@ -137,7 +166,7 @@ function App() {
 
       if (drug && !initialState[drug]) {
         initialState[drug] = {
-          visible: true,
+          visible: false,
           label: String(row.Phase),
           type: "Drug",
         };
@@ -159,22 +188,6 @@ function App() {
       const class_disease = normalizeDiseaseCategory(row.Disease_category);
       const class_gene = row["Gene category"];
       const class_drug = row.Phase;
-
-      if (disease && expandedState[disease] !== undefined) {
-        if (!expandedState[disease].visible) {
-          return;
-        }
-      }
-      if (gene && expandedState[gene] !== undefined) {
-        if (!expandedState[gene].visible) {
-          return;
-        }
-      }
-      if (drug && expandedState[drug] !== undefined) {
-        if (!expandedState[drug].visible) {
-          return;
-        }
-      }
 
       if (disease && !nodesMap.has(disease)) {
         nodesMap.set(disease, {
@@ -209,7 +222,7 @@ function App() {
         nodesMap.set(drug, {
           id: drug,
           type: "Drug",
-          class: class_drug,
+          class: class_drug !== undefined && class_drug !== null ? String(class_drug) : class_drug,
           Drug_name: drug,
           Phase: row.Phase,
         });
@@ -226,109 +239,129 @@ function App() {
     return { nodes: Array.from(nodesMap.values()), links };
   };
 
-  useEffect(() => {
-    if (jsonData) {
-      const scopedRows =
-        selectedDiseases.length > 0
-          ? jsonData.filter((row) => selectedDiseases.includes(row.Disease))
-          : [];
-      setExpandedState(buildExpandedStateFromData(scopedRows));
-      if (hasInitialFilterApplied.current) {
-        setGraphData({ nodes: [], links: [] });
-      }
-    }
-  }, [jsonData, selectedDiseases]);
+  const syncLegendFromGraph = useCallback((graph) => {
+    const presentIds = new Set((graph?.nodes || []).map((node) => node.id));
+    const presentClasses = new Set(
+      (graph?.nodes || []).map((node) => String(node.class))
+    );
+
+    setAvailableClasses((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        next[key] = presentClasses.has(String(key));
+      });
+      presentClasses.forEach((cls) => {
+        next[cls] = true;
+      });
+      return next;
+    });
+
+    setAvailableIds(() => {
+      const next = {};
+      presentIds.forEach((id) => {
+        next[id] = true;
+      });
+      return next;
+    });
+
+    setCheckedClasses((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        next[key] = presentClasses.has(String(key));
+      });
+      return next;
+    });
+
+    setExpandedState((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((id) => {
+        next[id] = {
+          ...next[id],
+          visible: presentIds.has(id),
+        };
+      });
+      return next;
+    });
+  }, []);
 
   const handleClassCheckboxChange = (className, checked) => {
-    setCheckedClasses((prevCheckedClasses) => ({
-      ...prevCheckedClasses,
+    setCheckedClasses((prev) => ({
+      ...prev,
       [className]: checked,
     }));
   };
 
-  const handleFilterData = useCallback(
-    ({ selectedClasses, selectedExpandedItems }) => {
-      if (!jsonData) return;
+  const applyFilters = useCallback(() => {
+    if (!jsonData) return;
 
-      if (selectedDiseases.length === 0) {
-        setGraphData({ nodes: [], links: [] });
-        return;
+    if (selectedDiseases.length === 0) {
+      setGraphData({ nodes: [], links: [] });
+      syncLegendFromGraph({ nodes: [], links: [] });
+      return;
+    }
+
+    const hasLegendChecks = Object.values(checkedClasses).some(Boolean);
+
+    const filteredData = jsonData.filter((row) => {
+      if (!selectedDiseases.includes(row.Disease)) {
+        return false;
       }
 
-      const filteredData = jsonData.filter((row) => {
-        const diseaseCategory = normalizeDiseaseCategory(row.Disease_category);
-        const geneCategory = row["Gene category"];
-        const phaseValue = row?.Phase !== undefined ? String(row.Phase) : undefined;
-        const disease = row.Disease;
-        const gene = row.Gene;
-        const drug = row.Drug_name;
-
-        if (!selectedDiseases.includes(disease)) {
-          return false;
-        }
-
-        const classMatched =
-          (diseaseCategory && selectedClasses.includes(diseaseCategory)) ||
-          (geneCategory && selectedClasses.includes(geneCategory)) ||
-          (phaseValue && selectedClasses.includes(phaseValue));
-
-        if (!classMatched) return false;
-
-        if (disease && expandedState[disease] !== undefined) {
-          if (!selectedExpandedItems.includes(disease)) return false;
-        }
-
-        if (gene && expandedState[gene] !== undefined) {
-          if (!selectedExpandedItems.includes(gene)) return false;
-        }
-
-        if (drug && expandedState[drug] !== undefined) {
-          if (!selectedExpandedItems.includes(drug)) return false;
-        }
-
+      if (!hasLegendChecks) {
         return true;
-      });
+      }
 
-      const newGraphData = createNodesAndLinks(filteredData);
-      setGraphData(newGraphData);
-    },
-    [jsonData, selectedDiseases, expandedState, checkedClasses]
-  );
+      const diseaseCategory = normalizeDiseaseCategory(row.Disease_category);
+      const geneCategory = row["Gene category"];
+      const phaseValue = row?.Phase !== undefined && row?.Phase !== null ? String(row.Phase) : undefined;
+      const disease = row.Disease;
+      const gene = row.Gene;
+      const drug = row.Drug_name;
 
-  const applyFilters = useCallback(() => {
-    const selectedClasses = Object.entries(checkedClasses)
-      .filter(([, checked]) => checked)
-      .map(([className]) => className);
+      const classMatched =
+        (diseaseCategory && checkedClasses[diseaseCategory]) ||
+        (geneCategory && checkedClasses[geneCategory]) ||
+        (phaseValue && checkedClasses[phaseValue]);
 
-    const selectedExpandedItems = Object.entries(expandedState)
-      .filter(([id, details]) => {
-        if (!details.visible) {
-          return false;
-        }
-        if (details.type === "Disease") {
-          return selectedDiseases.includes(id);
-        }
-        return true;
-      })
-      .map(([id]) => id);
+      if (!classMatched) return false;
 
-    handleFilterData({ selectedClasses, selectedExpandedItems });
-  }, [checkedClasses, expandedState, selectedDiseases, handleFilterData]);
+      if (disease && expandedState[disease] !== undefined && !expandedState[disease].visible) {
+        return false;
+      }
+      if (gene && expandedState[gene] !== undefined && !expandedState[gene].visible) {
+        return false;
+      }
+      if (drug && expandedState[drug] !== undefined && !expandedState[drug].visible) {
+        return false;
+      }
+
+      return true;
+    });
+
+    const newGraphData = createNodesAndLinks(filteredData);
+    setGraphData(newGraphData);
+    syncLegendFromGraph(newGraphData);
+  }, [jsonData, selectedDiseases, checkedClasses, expandedState, syncLegendFromGraph]);
 
   useEffect(() => {
-    if (
-      jsonData &&
-      selectedDiseases.length > 0 &&
-      Object.keys(expandedState).length > 0 &&
-      !hasInitialFilterApplied.current
-    ) {
+    if (jsonData) {
+      setExpandedState(buildExpandedStateFromData(jsonData));
+    }
+  }, [jsonData]);
+
+  useEffect(() => {
+    if (jsonData && selectedDiseases.length > 0 && !hasInitialFilterApplied.current) {
       hasInitialFilterApplied.current = true;
       applyFilters();
     }
-  }, [jsonData, selectedDiseases, expandedState, applyFilters]);
+  }, [jsonData, selectedDiseases, applyFilters]);
 
   const handleDiseaseSelectionChange = (value) => {
     setSelectedDiseases(value);
+    if (hasInitialFilterApplied.current) {
+      setGraphData({ nodes: [], links: [] });
+      syncLegendFromGraph({ nodes: [], links: [] });
+    }
   };
 
   const handleOpenBox = () => {
@@ -438,11 +471,11 @@ function App() {
           >
             <Legend
               checkedClasses={checkedClasses}
-              onClassChange={handleClassCheckboxChange}
-              setCheckedClasses={setCheckedClasses}
               expandedState={expandedState}
+              availableClasses={availableClasses}
+              availableIds={availableIds}
+              onClassChange={handleClassCheckboxChange}
               setExpandedState={setExpandedState}
-              selectedDiseases={selectedDiseases}
             />
           </Card>
         </Col>
