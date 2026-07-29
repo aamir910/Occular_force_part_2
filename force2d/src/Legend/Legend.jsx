@@ -8,18 +8,18 @@ const LEGEND_ITEMS = [
   {
     group: "Disease",
     items: [
-      { shape: "triangle", color: "red", label: "Refractive errors", class: "Refractive errors" },
-      { shape: "triangle", color: "blue", label: "Retinal diseases", class: "Retinal diseases" },
+      { shape: "triangle", color: "red", label: "Refractive Errors", class: "Refractive Errors" },
+      { shape: "triangle", color: "blue", label: "Retinal Diseases", class: "Retinal Diseases" },
       { shape: "triangle", color: "green", label: "Others", class: "Others" },
-      { shape: "triangle", color: "orange", label: "Lens diseases", class: "Lens diseases" },
-      { shape: "triangle", color: "purple", label: "Ocular hypertension", class: "Ocular hypertension" },
-      { shape: "triangle", color: "pink", label: "Ocular motility disorders", class: "Ocular motility disorders" },
-      { shape: "triangle", color: "cyan", label: "Uveal diseases", class: "Uveal diseases" },
-      { shape: "triangle", color: "magenta", label: "Corneal diseases", class: "Corneal diseases" },
-      { shape: "triangle", color: "lime", label: "Conjunctival diseases", class: "Conjunctival diseases" },
-      { shape: "triangle", color: "teal", label: "Orbital diseases", class: "Orbital diseases" },
+      { shape: "triangle", color: "orange", label: "Lens Diseases", class: "Lens Diseases" },
+      { shape: "triangle", color: "purple", label: "Ocular Hypertension", class: "Ocular Hypertension" },
+      { shape: "triangle", color: "pink", label: "Ocular Motility Disorders", class: "Ocular Motility Disorders" },
+      { shape: "triangle", color: "cyan", label: "Uveal Diseases", class: "Uveal Diseases" },
+      { shape: "triangle", color: "magenta", label: "Corneal Diseases", class: "Corneal Diseases" },
+      { shape: "triangle", color: "lime", label: "Conjunctival Diseases", class: "Conjunctival Diseases" },
+      { shape: "triangle", color: "teal", label: "Orbital Diseases", class: "Orbital Diseases" },
       { shape: "triangle", color: "salmon", label: "Eye Neoplasms", class: "Eye Neoplasms" },
-      { shape: "triangle", color: "violet", label: "Lacrimal Apparatus diseases", class: "Lacrimal Apparatus diseases" },
+      { shape: "triangle", color: "violet", label: "Lacrimal Apparatus Diseases", class: "Lacrimal Apparatus Diseases" },
     ],
   },
   {
@@ -75,7 +75,8 @@ const Legend = ({
       ...group,
       items: group.items.filter((item) =>
         Object.values(expandedState).some(
-          (details) => String(details.label) === String(item.class)
+          (details) =>
+            String(details.label).toLowerCase() === String(item.class).toLowerCase()
         )
       ),
     })).filter((group) => group.items.length > 0);
@@ -86,7 +87,7 @@ const Legend = ({
 
     return Object.entries(expandedState)
       .filter(([id, details]) => {
-        if (String(details.label) !== String(item.class)) {
+        if (String(details.label).toLowerCase() !== String(item.class).toLowerCase()) {
           return false;
         }
         if (details.type === "Disease" && !selectedDiseases.includes(id)) {
@@ -107,7 +108,7 @@ const Legend = ({
       group.items.forEach((item) => {
         const relatedExpandedItems = Object.entries(expandedState).filter(
           ([id, details]) => {
-            if (String(details.label) !== String(item.class)) {
+            if (String(details.label).toLowerCase() !== String(item.class).toLowerCase()) {
               return false;
             }
             if (details.type === "Disease") {
@@ -161,7 +162,7 @@ const Legend = ({
       setExpandedState((prev) => {
         const updated = { ...prev };
         Object.entries(updated).forEach(([id, details]) => {
-          if (String(details.label) !== String(targetItem.class)) {
+          if (String(details.label).toLowerCase() !== String(targetItem.class).toLowerCase()) {
             return;
           }
           if (details.type === "Disease" && !selectedDiseases.includes(id)) {

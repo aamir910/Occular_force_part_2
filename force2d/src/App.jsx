@@ -12,23 +12,42 @@ const DEFAULT_SELECTED_DISEASES = [
   "PROLIFERATIVE VITREORETINOPATHY",
 ];
 
+const normalizeDiseaseCategory = (category) => {
+  if (category == null) return category;
+  const aliases = {
+    "Eye Nwoplasms": "Eye Neoplasms",
+    "Refractive errors": "Refractive Errors",
+    "Retinal diseases": "Retinal Diseases",
+    "Lens diseases": "Lens Diseases",
+    "Ocular hypertension": "Ocular Hypertension",
+    "Ocular motility disorders": "Ocular Motility Disorders",
+    "Uveal diseases": "Uveal Diseases",
+    "Corneal diseases": "Corneal Diseases",
+    "Conjunctival diseases": "Conjunctival Diseases",
+    "Orbital diseases": "Orbital Diseases",
+    "Lacrimal Apparatus diseases": "Lacrimal Apparatus Diseases",
+  };
+  const trimmed = String(category).trim();
+  return aliases[trimmed] || trimmed;
+};
+
 function App() {
   const [jsonData, setJsonData] = useState(null);
   const [originalData, setOriginalData] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [checkedClasses, setCheckedClasses] = useState({
-    "Refractive errors": true,
-    "Retinal diseases": true,
+    "Refractive Errors": true,
+    "Retinal Diseases": true,
     Others: true,
-    "Lens diseases": true,
-    "Ocular hypertension": true,
-    "Ocular motility disorders": true,
-    "Uveal diseases": true,
-    "Corneal diseases": true,
-    "Conjunctival diseases": true,
-    "Orbital diseases": true,
+    "Lens Diseases": true,
+    "Ocular Hypertension": true,
+    "Ocular Motility Disorders": true,
+    "Uveal Diseases": true,
+    "Corneal Diseases": true,
+    "Conjunctival Diseases": true,
+    "Orbital Diseases": true,
     "Eye Neoplasms": true,
-    "Lacrimal Apparatus diseases": true,
+    "Lacrimal Apparatus Diseases": true,
     Pseudogene: true,
     "Genetic Locus": true,
     lncRNA: true,
@@ -103,7 +122,7 @@ function App() {
       if (disease && !initialState[disease]) {
         initialState[disease] = {
           visible: true,
-          label: row.Disease_category,
+          label: normalizeDiseaseCategory(row.Disease_category),
           type: "Disease",
         };
       }
@@ -137,7 +156,7 @@ function App() {
       const gene = row.Gene;
       const drug = row.Drug_name;
       const Phenotypes = row.Phenotypes;
-      const class_disease = row.Disease_category;
+      const class_disease = normalizeDiseaseCategory(row.Disease_category);
       const class_gene = row["Gene category"];
       const class_drug = row.Phase;
 
@@ -237,7 +256,7 @@ function App() {
       }
 
       const filteredData = jsonData.filter((row) => {
-        const diseaseCategory = row.Disease_category;
+        const diseaseCategory = normalizeDiseaseCategory(row.Disease_category);
         const geneCategory = row["Gene category"];
         const phaseValue = row?.Phase !== undefined ? String(row.Phase) : undefined;
         const disease = row.Disease;
@@ -326,7 +345,7 @@ function App() {
         const disease = row.Disease;
         const gene = row.Gene;
         const drug = row.Drug_name;
-        const class_disease = row.Disease_category;
+        const class_disease = normalizeDiseaseCategory(row.Disease_category);
         const class_gene = row["Gene category"];
         const class_drug = row.Phase;
 

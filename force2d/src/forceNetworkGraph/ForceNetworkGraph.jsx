@@ -62,50 +62,50 @@ const ForceNetworkGraph = ({ nodes, links }) => {
       }
     }
     
-    switch (nodeClass) {
-      case "Refractive errors":
-        return "red";
-      case "Retinal diseases":
-        return "blue";
-      case "Others":
-        return "green";
-      case "Lens diseases":
-        return "orange";
-      case "Ocular hypertension":
-        return "purple";
-      case "Ocular motility disorders":
-        return "pink";
-      case "Uveal diseases":
-        return "cyan";
-      case "Corneal diseases":
-        return "magenta";
-      case "Conjunctival diseases":
-        return "lime";
-      case "Orbital diseases":
-        return "teal";
-      case "Eye Neoplasms":
-        return "salmon";
-      case "Lacrimal Apparatus diseases":
-        return "violet";
-      case "Pseudogene":
-        return "brown";
-      case "Genetic Locus":
-        return "darkgreen";
-      case "lncRNA":
-        return "orange";
-      case "miRNA":
-        return "purple";
-      case "mt_tRNA":
-        return "darkblue";
-      case "Other":
-        return "gray";
-      case "Protein coding":
-        return "yellow";
-      case "RNA gene":
-        return "pink";
-      default:
-        return "black"; // Default color if class not found
+    const colorByClass = {
+      "Refractive Errors": "red",
+      "Refractive errors": "red",
+      "Retinal Diseases": "blue",
+      "Retinal diseases": "blue",
+      Others: "green",
+      "Lens Diseases": "orange",
+      "Lens diseases": "orange",
+      "Ocular Hypertension": "purple",
+      "Ocular hypertension": "purple",
+      "Ocular Motility Disorders": "pink",
+      "Ocular motility disorders": "pink",
+      "Uveal Diseases": "cyan",
+      "Uveal diseases": "cyan",
+      "Corneal Diseases": "magenta",
+      "Corneal diseases": "magenta",
+      "Conjunctival Diseases": "lime",
+      "Conjunctival diseases": "lime",
+      "Orbital Diseases": "teal",
+      "Orbital diseases": "teal",
+      "Eye Neoplasms": "salmon",
+      "Eye Nwoplasms": "salmon",
+      "Lacrimal Apparatus Diseases": "violet",
+      "Lacrimal Apparatus diseases": "violet",
+      Pseudogene: "brown",
+      "Genetic Locus": "darkgreen",
+      lncRNA: "orange",
+      miRNA: "purple",
+      mt_tRNA: "darkblue",
+      Other: "gray",
+      "Protein coding": "yellow",
+      "RNA gene": "pink",
+    };
+
+    if (colorByClass[nodeClass]) {
+      return colorByClass[nodeClass];
     }
+
+    // Case-insensitive fallback for Excel category spelling differences
+    const lowered = String(nodeClass).toLowerCase();
+    const matchedKey = Object.keys(colorByClass).find(
+      (key) => key.toLowerCase() === lowered
+    );
+    return matchedKey ? colorByClass[matchedKey] : "black";
   };
 
   const drawNode = (node, ctx) => {
