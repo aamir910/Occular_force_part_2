@@ -14,12 +14,12 @@ const DEFAULT_SELECTED_DISEASES = [
 ];
 
 const FILTER_TYPE_OPTIONS = [
-  { value: "disease_name", label: "Disease Name" },
-  { value: "disease_class", label: "Disease Class" },
-  { value: "gene_category", label: "Gene Category" },
-  { value: "gene_name", label: "Gene Name" },
-  { value: "drug_name", label: "Drug Name" },
-  { value: "drug_phase", label: "Drug Phase" },
+  { value: "disease_name", label: "Disease name" },
+  { value: "disease_class", label: "Disease class" },
+  { value: "gene_category", label: "Gene category" },
+  { value: "gene_name", label: "Gene name" },
+  { value: "drug_name", label: "Drug name" },
+  { value: "drug_phase", label: "Drug phase" },
 ];
 
 const FILTER_VALUE_PLACEHOLDERS = {
@@ -612,7 +612,7 @@ function App() {
                   htmlFor="filter-type"
                   style={{ display: "block", fontWeight: 500 }}
                 >
-                  Filter Type
+                  Filter type
                 </label>
                 <Select
                   id="filter-type"
@@ -667,7 +667,7 @@ function App() {
                     onClick={applyFilters}
                     disabled={selectedFilterValues.length === 0}
                   >
-                    Filter Data
+                    Filter data
                   </Button>
                 </>
               )}
@@ -683,7 +683,7 @@ function App() {
                   overflow: "hidden",
                 }}
               >
-                Select filter values and click Filter Data to view the graph.
+                Select filter values and click Filter data to view the graph.
               </p>
             )}
           </Card>
