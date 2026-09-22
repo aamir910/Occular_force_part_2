@@ -31,6 +31,8 @@ const FILTER_VALUE_PLACEHOLDERS = {
   drug_phase: "Select one or more drug phases",
 };
 
+const formatDrugPhaseLabel = (phase) => `Phase ${phase}`;
+
 const normalizeDiseaseCategory = (category) => {
   if (category == null) return category;
   const aliases = {
@@ -165,11 +167,17 @@ function App() {
       if (row.Gene) geneNames.add(row.Gene);
       if (row.Drug_name) drugNames.add(row.Drug_name);
       if (row.Phase !== undefined && row.Phase !== null && row.Phase !== "") {
-        drugPhases.add(String(row.Phase));
+        drugPhases.add(formatDrugPhaseLabel(row.Phase));
       }
     });
 
     const sorted = (set) => Array.from(set).sort((a, b) => String(a).localeCompare(String(b)));
+    const sortedPhases = Array.from(drugPhases).sort((a, b) => {
+      const numA = Number(String(a).replace(/^Phase\s+/i, ""));
+      const numB = Number(String(b).replace(/^Phase\s+/i, ""));
+      if (!Number.isNaN(numA) && !Number.isNaN(numB)) return numA - numB;
+      return String(a).localeCompare(String(b));
+    });
 
     setFilterOptions({
       disease_name: sorted(diseaseNames),
@@ -177,7 +185,7 @@ function App() {
       gene_category: sorted(geneCategories),
       gene_name: sorted(geneNames),
       drug_name: sorted(drugNames),
-      drug_phase: sorted(drugPhases),
+      drug_phase: sortedPhases,
     });
 
     const validDefaults = DEFAULT_SELECTED_DISEASES.filter((disease) =>
@@ -206,7 +214,7 @@ function App() {
         return (
           row.Phase !== undefined &&
           row.Phase !== null &&
-          values.includes(String(row.Phase))
+          values.includes(formatDrugPhaseLabel(row.Phase))
         );
       default:
         return false;
@@ -617,7 +625,15 @@ function App() {
 
               {filterType && (
                 <>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                      flex: 1,
+                      minWidth: 220,
+                    }}
+                  >
                     <label
                       htmlFor="filter-values"
                       style={{ display: "block", fontWeight: 500 }}
@@ -637,7 +653,7 @@ function App() {
                       value={selectedFilterValues}
                       onChange={handleFilterValuesChange}
                       optionFilterProp="children"
-                      style={{ width: 360 }}
+                      style={{ width: "100%" }}
                     >
                       {(filterOptions[filterType] || []).map((option) => (
                         <Option key={option} value={option}>
