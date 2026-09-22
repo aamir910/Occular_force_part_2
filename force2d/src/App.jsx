@@ -6,11 +6,28 @@ import { saveAs } from "file-saver";
 import ForceNetworkGraph from "./forceNetworkGraph/ForceNetworkGraph";
 import Legend from "./Legend/Legend";
 
+const DEFAULT_FILTER_TYPE = "disease_name";
 const DEFAULT_SELECTED_DISEASES = [
   "POROKERATOSIS",
   "PROLIFERATIVE DIABETIC RETINOPATHY",
   "PROLIFERATIVE VITREORETINOPATHY",
 ];
+
+const FILTER_TYPE_OPTIONS = [
+  { value: "disease_name", label: "Disease Name" },
+  { value: "disease_class", label: "Disease Class" },
+  { value: "gene_category", label: "Gene Category" },
+  { value: "gene_name", label: "Gene Name" },
+  { value: "drug_name", label: "Drug Name" },
+];
+
+const FILTER_VALUE_PLACEHOLDERS = {
+  disease_name: "Select one or more disease names",
+  disease_class: "Select one or more disease classes",
+  gene_category: "Select one or more gene categories",
+  gene_name: "Select one or more gene names",
+  drug_name: "Select one or more drug names",
+};
 
 const normalizeDiseaseCategory = (category) => {
   if (category == null) return category;
@@ -94,8 +111,15 @@ function App() {
     "5": false,
   });
   const [availableIds, setAvailableIds] = useState({});
-  const [uniqueClasses, setUniqueClasses] = useState([]);
-  const [selectedDiseases, setSelectedDiseases] = useState(DEFAULT_SELECTED_DISEASES);
+  const [filterType, setFilterType] = useState(DEFAULT_FILTER_TYPE);
+  const [selectedFilterValues, setSelectedFilterValues] = useState(DEFAULT_SELECTED_DISEASES);
+  const [filterOptions, setFilterOptions] = useState({
+    disease_name: [],
+    disease_class: [],
+    gene_category: [],
+    gene_name: [],
+    drug_name: [],
+  });
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const rowRef = useRef(null);
   const hasInitialFilterApplied = useRef(false);
@@ -115,29 +139,64 @@ function App() {
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       console.log("Excel data loaded:", jsonData);
       setJsonData(jsonData);
-      extractUniqueClasses(jsonData);
+      extractFilterOptions(jsonData);
       setOriginalData(jsonData);
     } catch (error) {
       console.error("Error reading the Excel file:", error);
     }
   };
 
-  const extractUniqueClasses = (data) => {
-    const classes = new Set();
+  const extractFilterOptions = (data) => {
+    const diseaseNames = new Set();
+    const diseaseClasses = new Set();
+    const geneCategories = new Set();
+    const geneNames = new Set();
+    const drugNames = new Set();
+
     data.forEach((row) => {
-      const classOfNode = row["Disease"];
-      if (classOfNode) {
-        classes.add(classOfNode);
-      }
+      if (row.Disease) diseaseNames.add(row.Disease);
+      const diseaseClass = normalizeDiseaseCategory(row.Disease_category);
+      if (diseaseClass) diseaseClasses.add(diseaseClass);
+      if (row["Gene category"]) geneCategories.add(row["Gene category"]);
+      if (row.Gene) geneNames.add(row.Gene);
+      if (row.Drug_name) drugNames.add(row.Drug_name);
     });
-    setUniqueClasses(Array.from(classes).sort((a, b) => a.localeCompare(b)));
-    setSelectedDiseases((prev) => {
-      const validDefaults = DEFAULT_SELECTED_DISEASES.filter((disease) => classes.has(disease));
-      if (validDefaults.length > 0) {
-        return validDefaults;
-      }
-      return prev;
+
+    const sorted = (set) => Array.from(set).sort((a, b) => String(a).localeCompare(String(b)));
+
+    setFilterOptions({
+      disease_name: sorted(diseaseNames),
+      disease_class: sorted(diseaseClasses),
+      gene_category: sorted(geneCategories),
+      gene_name: sorted(geneNames),
+      drug_name: sorted(drugNames),
     });
+
+    const validDefaults = DEFAULT_SELECTED_DISEASES.filter((disease) =>
+      diseaseNames.has(disease)
+    );
+    if (validDefaults.length > 0) {
+      setSelectedFilterValues(validDefaults);
+    }
+  };
+
+  const rowMatchesPrimaryFilter = (row, type, values) => {
+    if (!values.length) return false;
+
+    switch (type) {
+      case "disease_name":
+        return values.includes(row.Disease);
+      case "disease_class":
+        return values.includes(normalizeDiseaseCategory(row.Disease_category));
+      case "gene_category":
+        return values.includes(row["Gene category"]);
+      case "gene_name":
+        return values.includes(row.Gene);
+      case "drug_name":
+        return values.includes(row.Drug_name);
+      default:
+        return false;
+    }
   };
 
   const buildExpandedStateFromData = (data) => {
@@ -294,7 +353,7 @@ function App() {
   const applyFilters = useCallback(() => {
     if (!jsonData) return;
 
-    if (selectedDiseases.length === 0) {
+    if (selectedFilterValues.length === 0) {
       setGraphData({ nodes: [], links: [] });
       syncLegendFromGraph({ nodes: [], links: [] });
       return;
@@ -303,7 +362,7 @@ function App() {
     const hasLegendChecks = Object.values(checkedClasses).some(Boolean);
 
     const filteredData = jsonData.filter((row) => {
-      if (!selectedDiseases.includes(row.Disease)) {
+      if (!rowMatchesPrimaryFilter(row, filterType, selectedFilterValues)) {
         return false;
       }
 
@@ -341,7 +400,7 @@ function App() {
     const newGraphData = createNodesAndLinks(filteredData);
     setGraphData(newGraphData);
     syncLegendFromGraph(newGraphData);
-  }, [jsonData, selectedDiseases, checkedClasses, expandedState, syncLegendFromGraph]);
+  }, [jsonData, filterType, selectedFilterValues, checkedClasses, expandedState, syncLegendFromGraph]);
 
   useEffect(() => {
     if (jsonData) {
@@ -350,18 +409,32 @@ function App() {
   }, [jsonData]);
 
   useEffect(() => {
-    if (jsonData && selectedDiseases.length > 0 && !hasInitialFilterApplied.current) {
+    if (
+      jsonData &&
+      selectedFilterValues.length > 0 &&
+      !hasInitialFilterApplied.current
+    ) {
       hasInitialFilterApplied.current = true;
       applyFilters();
     }
-  }, [jsonData, selectedDiseases, applyFilters]);
+  }, [jsonData, selectedFilterValues, applyFilters]);
 
-  const handleDiseaseSelectionChange = (value) => {
-    setSelectedDiseases(value);
+  const clearGraphUntilFilter = () => {
     if (hasInitialFilterApplied.current) {
       setGraphData({ nodes: [], links: [] });
       syncLegendFromGraph({ nodes: [], links: [] });
     }
+  };
+
+  const handleFilterTypeChange = (value) => {
+    setFilterType(value);
+    setSelectedFilterValues([]);
+    clearGraphUntilFilter();
+  };
+
+  const handleFilterValuesChange = (value) => {
+    setSelectedFilterValues(value);
+    clearGraphUntilFilter();
   };
 
   const handleOpenBox = () => {
@@ -505,37 +578,58 @@ function App() {
           >
             <div style={{ marginBottom: "16px" }}>
               <label
-                htmlFor="disease-filter"
+                htmlFor="filter-type"
                 style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}
               >
-                Filter by Disease Name
+                Filter Type
               </label>
-              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                <Select
-                  id="disease-filter"
-                  mode="multiple"
-                  showSearch
-                  allowClear
-                  placeholder="Select one or more diseases"
-                  value={selectedDiseases}
-                  onChange={handleDiseaseSelectionChange}
-                  optionFilterProp="children"
-                  style={{ flex: 1 }}
-                >
-                  {uniqueClasses.map((disease) => (
-                    <Option key={disease} value={disease}>
-                      {disease}
-                    </Option>
-                  ))}
-                </Select>
-                <Button
-                  type="primary"
-                  onClick={applyFilters}
-                  disabled={selectedDiseases.length === 0}
-                >
-                  Filter Data
-                </Button>
-              </div>
+              <Select
+                id="filter-type"
+                value={filterType}
+                onChange={handleFilterTypeChange}
+                style={{ width: "100%", marginBottom: "12px" }}
+                options={FILTER_TYPE_OPTIONS}
+              />
+
+              {filterType && (
+                <>
+                  <label
+                    htmlFor="filter-values"
+                    style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}
+                  >
+                    {
+                      FILTER_TYPE_OPTIONS.find((option) => option.value === filterType)
+                        ?.label
+                    }
+                  </label>
+                  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    <Select
+                      id="filter-values"
+                      mode="multiple"
+                      showSearch
+                      allowClear
+                      placeholder={FILTER_VALUE_PLACEHOLDERS[filterType]}
+                      value={selectedFilterValues}
+                      onChange={handleFilterValuesChange}
+                      optionFilterProp="children"
+                      style={{ flex: 1 }}
+                    >
+                      {(filterOptions[filterType] || []).map((option) => (
+                        <Option key={option} value={option}>
+                          {option}
+                        </Option>
+                      ))}
+                    </Select>
+                    <Button
+                      type="primary"
+                      onClick={applyFilters}
+                      disabled={selectedFilterValues.length === 0}
+                    >
+                      Filter Data
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
 
             {graphData.nodes.length > 0 && graphData.links.length > 0 ? (
@@ -548,7 +642,7 @@ function App() {
                   overflow: "hidden",
                 }}
               >
-                Select diseases and click Filter Data to view the graph.
+                Select filter values and click Filter Data to view the graph.
               </p>
             )}
           </Card>
